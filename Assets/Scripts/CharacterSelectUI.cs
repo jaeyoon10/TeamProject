@@ -11,6 +11,15 @@ public class CharacterSelectUI : MonoBehaviour
     public Sprite edwinSprite, isabellaSprite, tuskSprite;
     public GameObject characterInfoPanel; // 캐릭터 정보를 표시할 전체 패널 (오른쪽 패널)
 
+    public Button checkbtn;
+    public Button BackScenebtn;
+    public Button BackPanelbtn;
+
+    public GameObject nicknamePanel;             // 닉네임 패널
+    public TMP_InputField nicknameInputField;    // 닉네임 입력 필드
+    public Button nicknameConfirmButton;         // 확인 버튼
+    public Button nicknameCancelButton;
+
     // 각각의 텍스트 UI (이름, 설명, 능력치)
     public TMP_Text nameText;
     public TMP_Text descriptionText;
@@ -24,6 +33,9 @@ public class CharacterSelectUI : MonoBehaviour
         selectedCharacter = characterId;
         characterButtonPanel.SetActive(false); // 선택 버튼 숨기기
         characterInfoPanel.SetActive(true);    // 설명 패널 보이기
+        checkbtn.gameObject.SetActive(true); // 선택 버튼 보이기
+        BackPanelbtn.gameObject.SetActive(true); // 캐릭터 선택 패널로 뒤로가기 보이기
+        BackScenebtn.gameObject.SetActive(false); // 게임 씬 뒤로가기 끄기
 
         //캐릭터 정보
         switch (characterId)
@@ -56,13 +68,40 @@ public class CharacterSelectUI : MonoBehaviour
     {
         characterInfoPanel.SetActive(false);  // 설명 끄기
         characterButtonPanel.SetActive(true); // 캐릭터 선택 다시 보이기
+        checkbtn.gameObject.SetActive(false); //선택 버튼 끄기
+        BackPanelbtn.gameObject.SetActive(false); // 캐릭터 선택 패널로 뒤로가기 끄기
+        BackScenebtn.gameObject.SetActive(true); // 게임 씬 뒤로가기 보이기
     }
 
     public void OnClickSelect() // "캐릭터 선택" 버튼을 누르면 호출됨
     {
         Debug.Log($"{selectedCharacter} 선택됨!");
 
-        // 다음 씬 로딩 예시
-        UnityEngine.SceneManagement.SceneManager.LoadScene("GameScene"); // GameScene 씬으로 전환 (선택 완료 후 게임 시작)
+        nicknamePanel.SetActive(true);
+        
+    }
+
+    public void OnClickNicknameConfirm()
+    {
+        string nickname = nicknameInputField.text;
+
+        if (string.IsNullOrEmpty(nickname))
+        {
+            Debug.Log("닉네임을 입력해주세요.");
+            return;
+        }
+
+        Debug.Log($"선택된 캐릭터: {selectedCharacter}, 닉네임: {nickname}");
+
+        // 플레이어 정보 저장 가능 (PlayerPrefs 등)
+        PlayerPrefs.SetString("SelectedCharacter", selectedCharacter);
+        PlayerPrefs.SetString("Nickname", nickname);
+
+        // 씬 이동
+        UnityEngine.SceneManagement.SceneManager.LoadScene("GameScene");
+    }
+    public void OnClickNicknameCancel()
+    {
+        nicknamePanel.SetActive(false);
     }
 }
