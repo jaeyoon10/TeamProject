@@ -22,6 +22,9 @@ public class HammerMiniGame : MonoBehaviour
     public float greatZoneSize = 30f;
     public float goodZoneSize = 60f;
 
+    [Tooltip("히트존 아크 전체 크기(도)")]
+    public float hitArcSize = 60f;
+
     private float currentAngle;
     private List<UIArc> arcs = new List<UIArc>();
     private List<float> zoneAngles = new List<float>();
@@ -74,11 +77,13 @@ public class HammerMiniGame : MonoBehaviour
         for (int i = 0; i < count; i++)
         {
             // 1) UIArc 인스턴스 생성
+
             var a = Instantiate(arcPrefab, zoneContainer);
-            a.color = Color.white;      // 기본 색상
-            a.radius = zoneContainer.rect.height * 0.5f;
-            a.thickness = pointer.sizeDelta.y;
-            a.segments = 60;
+            var rt = a.GetComponent<RectTransform>();
+            rt.anchorMin = Vector2.zero;
+            rt.anchorMax = Vector2.one;
+            rt.offsetMin = rt.offsetMax = Vector2.zero;
+
 
             // 2) 랜덤 중심 각도
             float center = Random.Range(0f, 360f);
@@ -86,9 +91,12 @@ public class HammerMiniGame : MonoBehaviour
 
             // 3) Perfect / Great / Good / Miss 4단계 표시
             //    Perfect
-            a.startAngle = center - perfectZoneSize * 0.5f;
-            a.endAngle = center + perfectZoneSize * 0.5f;
-            a.color = Color.white;
+            a.startAngle = center - hitArcSize * 0.5f;
+            a.endAngle = center + hitArcSize * 0.5f;
+            //a.color = Color.white;
+            //a.radius = zoneContainer.rect.height * 0.5f;
+            //a.thickness = pointer.sizeDelta.y;
+
             arcs.Add(a);
         }
     }
@@ -114,7 +122,7 @@ public class HammerMiniGame : MonoBehaviour
 
         float rel = best;
         string res; Color col;
-        if (rel <= perfectZoneSize * 0.5f) { res = "Perfect"; col = Color.white; }
+        if (rel <= perfectZoneSize * 0.5f) { res = "Perfect"; col = Color.blue; }
         else if (rel <= greatZoneSize * 0.5f) { res = "Great"; col = Color.yellow; }
         else if (rel <= goodZoneSize * 0.5f) { res = "Good"; col = Color.green; }
         else { res = "Miss"; col = Color.red; }
