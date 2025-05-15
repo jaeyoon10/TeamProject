@@ -17,11 +17,6 @@ public class CharacterSelectUI : MonoBehaviour
     public Button BackScenebtn;
     public Button BackPanelbtn;
 
-    public GameObject nicknamePanel;             // 닉네임 패널
-    public TMP_InputField nicknameInputField;    // 닉네임 입력 필드
-    public Button nicknameConfirmButton;         // 확인 버튼
-    public Button nicknameCancelButton;
-
     // 각각의 텍스트 UI (이름, 설명, 능력치)
     public TMP_Text nameText;
     public TMP_Text descriptionText;
@@ -81,31 +76,13 @@ public class CharacterSelectUI : MonoBehaviour
     {
         Debug.Log($"{selectedCharacter} 선택됨!");
 
-        nicknamePanel.SetActive(true);
-        
-    }
-
-    public void OnClickNicknameConfirm()
-    {
-        string nickname = nicknameInputField.text;
-
-        if (string.IsNullOrEmpty(nickname))
-        {
-            Debug.Log("닉네임을 입력해주세요.");
-            return;
-        }
-
-        Debug.Log($"선택된 캐릭터: {selectedCharacter}, 닉네임: {nickname}");
-
-        // 플레이어 정보 저장 가능 (PlayerPrefs 등)
-        PlayerPrefs.SetString("SelectedCharacter", selectedCharacter);
-        PlayerPrefs.SetString("Nickname", nickname);
-
         // 씬 이동
         UnityEngine.SceneManagement.SceneManager.LoadScene("GameScene");
+
     }
-    public void OnClickNicknameCancel()
+
+    public void OnClickSceneBack()
     {
-        nicknamePanel.SetActive(false);
+        UnityEngine.SceneManagement.SceneManager.LoadScene("StartScene");
     }
 }
