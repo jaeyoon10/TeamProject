@@ -40,19 +40,11 @@ public class CatchBarController : MonoBehaviour
         Vector2 pos = rect.anchoredPosition;
         pos.y += velocity * Time.deltaTime;
 
-<<<<<<< HEAD
-        // 바깥으로 안 나가게 제한
-=======
-        // 3) 바깥으로 안 나가게 제한
->>>>>>> c472041acceb31b1cea906b1b395bcfbff9a1fcc
+
         float clampedY = Mathf.Clamp(pos.y, minY, maxY);
         pos.y = clampedY;
         rect.anchoredPosition = pos;
 
-<<<<<<< HEAD
-        if(clampedY >= maxY && velocity > 0f)
-=======
-        // 4) 천장(maxY)에 닿았을 때 위로 가는 속도 제거
         if (clampedY >= maxY && velocity > 0f)
         {
             velocity = 0f;
@@ -60,7 +52,6 @@ public class CatchBarController : MonoBehaviour
 
         // 5) 바닥(minY)에 닿았을 때 아래로 가는 속도 제거
         if (clampedY <= minY && velocity < 0f)
->>>>>>> c472041acceb31b1cea906b1b395bcfbff9a1fcc
         {
             velocity = 0f;
         }
