@@ -6,7 +6,7 @@ using TMPro;
 public class SharpeningSwipeGame : MonoBehaviour
 {
     [Header("Game Settings")]
-    public int sequenceLength = 4;               // 표시할 키 개수 (레시피 난이도에 따라 동적 변경)
+    public int sequenceLength = 4;               // 표시할 키 개수 
     public float displayDuration = 1.0f;         // 키 표시 시간 (초)
 
     [Header("UI Components")]
@@ -15,7 +15,7 @@ public class SharpeningSwipeGame : MonoBehaviour
     public TextMeshProUGUI resultText;           // 성공/실패 메시지
     public TextMeshProUGUI inputPromptText;      // "입력하세요" 안내 텍스트
 
-    private List<KeyCode> sequence;              // A/D 키 시퀀스 저장
+    private List<KeyCode> sequence;              
     private int inputIndex;                      // 현재 입력 인덱스
     private bool inputEnabled;                   // 입력 가능 여부
 
@@ -50,7 +50,6 @@ public class SharpeningSwipeGame : MonoBehaviour
         foreach (Transform child in slotContainer)
             Destroy(child.gameObject);
 
-        // 슬롯 프리팹 인스턴스화 및 텍스트 설정
         foreach (KeyCode key in sequence)
         {
             GameObject go = Instantiate(slotPrefab, slotContainer);
@@ -84,12 +83,11 @@ public class SharpeningSwipeGame : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.D))
         {
             KeyCode pressed = Input.GetKeyDown(KeyCode.A) ? KeyCode.A : KeyCode.D;
-            Debug.Log($"[SharpeningGame] KeyDown detected: {pressed}. current inputIndex: {inputIndex}");
-
+            
             if (pressed == sequence[inputIndex])
             {
                 inputIndex++;
-                if (inputIndex == 4)
+                if (inputIndex == 1)
                     inputPromptText.gameObject.SetActive(false);
 
                 if (inputIndex >= sequenceLength)

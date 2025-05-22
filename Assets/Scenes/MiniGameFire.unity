@@ -306,7 +306,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveArea: {fileID: 1738921710}
-  minSpeed: 450
+  minSpeed: 250
   maxSpeed: 650
   changeInterval: 1.3
 --- !u!1 &229271404
