@@ -65,10 +65,8 @@ public class CraftingUI : MonoBehaviour
         foreach (var ing in rd.ingredients)
         {
             var go = Instantiate(ingPrefab, ingContainer);
-            go.transform.Find("Icon").GetComponent<Image>().sprite =
-                ing.icon;
-            go.transform.Find("CountText").GetComponent<TMP_Text>().text =
-                ing.amount.ToString();
+            var item = go.GetComponent<IngItem>();
+            item.Init(ing.name, ing.icon, ing.amount);
         }
     }
 

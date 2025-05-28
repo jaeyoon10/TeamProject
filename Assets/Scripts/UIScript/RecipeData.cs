@@ -13,6 +13,7 @@ public class RecipeData : ScriptableObject
     [System.Serializable]
     public struct Ingredient
     {
+        public string name;
         public Sprite icon;
         public int amount;
     }

@@ -77,7 +77,7 @@ public class CharacterSelectUI : MonoBehaviour
         Debug.Log($"{selectedCharacter} º±≈√µ !");
 
         // æ¿ ¿Ãµø
-        UnityEngine.SceneManagement.SceneManager.LoadScene("GameScene");
+        UnityEngine.SceneManagement.SceneManager.LoadScene("UIScene");
 
     }
 
