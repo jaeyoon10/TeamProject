@@ -22,6 +22,6 @@ MonoBehaviour:
   - name: "\uD30C\uB780 \uBCF4\uC11D"
     icon: {fileID: -4007279082606720751, guid: b0f85d5a744f799449233745652b567a, type: 3}
     amount: 1
-  - name: "\uBCF4\uB77C \uBCF4\uC11C"
+  - name: "\uBCF4\uB77C \uBCF4\uC11D"
     icon: {fileID: -6658015361760761495, guid: 7ae2be9a267597a4596c1cdebed8f84d, type: 3}
     amount: 3
