@@ -100,11 +100,10 @@ public class StoreSlotLoader : MonoBehaviour
         int totalTemplates = materialTemplates.Count;
         int pickCount = Mathf.Min(3, totalTemplates);
 
-        // 오늘 전용 아이템 섞을 확률 판정
+        // TodaySpecial 섞을 확률 판단
         bool includeToday = Random.value < chanceToIncludeTodayItemInSpecial;
         if (includeToday)
         {
-            // 재료 + 강화 템플릿을 합친 combined 리스트에서 랜덤으로 1개 뽑기
             List<StoreItemData> combined = new List<StoreItemData>();
             combined.AddRange(materialTemplates);
             combined.AddRange(enhanceTemplates);
@@ -114,7 +113,6 @@ public class StoreSlotLoader : MonoBehaviour
                 int randIdx = Random.Range(0, combined.Count);
                 var baseData = combined[randIdx];
 
-                // Today 전용 효과 무작위 선택 (보라 or 파랑)
                 EffectType randomEffect = (Random.value < 0.5f)
                     ? EffectType.EasyMiniGame
                     : EffectType.NoBelowBQuality;
@@ -122,12 +120,18 @@ public class StoreSlotLoader : MonoBehaviour
                 int newPrice = Mathf.RoundToInt(baseData.price * Random.Range(0.2f, 0.9f));
                 newPrice = Mathf.Clamp(newPrice, baseData.minPrice, baseData.maxPrice);
 
-                // 재고는 무조건 1개
+                // 재고 1개
                 currentSpecialOffers.Add(new StoreItemData
                 {
                     icon = baseData.icon,
                     itemName = baseData.itemName,
-                    itemCategory = StoreItemCategory.TodaySpecial, // 변경된 부분
+
+                    // 원래 카테고리 유지
+                    baseCategory = baseData.baseCategory,
+
+                    // 오늘의 상품으로 바꿈
+                    itemCategory = StoreItemCategory.TodaySpecial,
+
                     price = newPrice,
                     minPrice = baseData.minPrice,
                     maxPrice = baseData.maxPrice,
@@ -135,12 +139,11 @@ public class StoreSlotLoader : MonoBehaviour
                     effectType = randomEffect
                 });
 
-                // 특가 슬롯 하나 채웠으므로 pickCount - 1
                 pickCount--;
             }
         }
 
-        // 남은 pickCount 만큼 materialTemplates에서 중복 없이 선택
+        // 나머지 pickCount만큼 일반 재료 템플릿에서 랜덤 선택
         while (usedIdx.Count < pickCount)
         {
             usedIdx.Add(Random.Range(0, totalTemplates));
@@ -148,7 +151,7 @@ public class StoreSlotLoader : MonoBehaviour
         foreach (int idx in usedIdx)
         {
             var t = materialTemplates[idx];
-            int amt = Random.Range(1, 6); // 랜덤 재고 1~5
+            int amt = Random.Range(1, 6);
 
             float factor = (Random.value < 0.5f)
                 ? Random.Range(0.2f, 0.5f)
@@ -160,12 +163,15 @@ public class StoreSlotLoader : MonoBehaviour
             {
                 icon = t.icon,
                 itemName = t.itemName,
-                itemCategory = t.itemCategory, // 보통 Material
+
+                baseCategory = t.baseCategory,         // ← 여기!
+                itemCategory = t.itemCategory,         // (=Material)
+
                 price = newPrice,
                 minPrice = t.minPrice,
                 maxPrice = t.maxPrice,
                 amount = amt,
-                effectType = t.effectType // 일반 재료 템플릿은 effectType=None
+                effectType = t.effectType
             });
         }
     }
@@ -186,20 +192,17 @@ public class StoreSlotLoader : MonoBehaviour
         int count = Mathf.Min(6, combined.Count);
         var usedIdx = new HashSet<int>();
         while (usedIdx.Count < count)
-        {
             usedIdx.Add(Random.Range(0, combined.Count));
-        }
 
         foreach (int idx in usedIdx)
         {
             var baseData = combined[idx];
-            int amt = Random.Range(1, 1); // 랜덤 재고 1~5
+            int amt = Random.Range(1, 2); // 재고 1개만
 
             float mul = Random.Range(1.2f, 2.0f);
             int newPrice = Mathf.RoundToInt(baseData.price * mul);
             newPrice = Mathf.Clamp(newPrice, baseData.minPrice, baseData.maxPrice);
 
-            // Today 전용 effectType 무작위 선택
             EffectType randomEffect = (Random.value < 0.5f)
                 ? EffectType.EasyMiniGame
                 : EffectType.NoBelowBQuality;
@@ -208,7 +211,10 @@ public class StoreSlotLoader : MonoBehaviour
             {
                 icon = baseData.icon,
                 itemName = baseData.itemName,
-                itemCategory = StoreItemCategory.TodaySpecial, // 변경된 부분
+
+                baseCategory = baseData.baseCategory,       // ← 원래 카테고리 복사
+                itemCategory = StoreItemCategory.TodaySpecial,
+
                 price = newPrice,
                 minPrice = baseData.minPrice,
                 maxPrice = baseData.maxPrice,

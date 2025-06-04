@@ -21,14 +21,19 @@ public enum EffectType
 [System.Serializable]
 public class StoreItemData
 {
-    public Sprite icon;                     // 아이템 아이콘
-    public string itemName;                 // 아이템 이름
-    public StoreItemCategory itemCategory;  // 카테고리 (Material/Enhance/TodaySpecial)
+    public Sprite icon;
+    public string itemName;
 
-    public int price;       // 기준 가격
-    public int minPrice;    // 최솟값(이하로 내려가지 않음)
-    public int maxPrice;    // 최댓값(이상으로 올라가지 않음)
+    // 새로 추가: “원래(Material/Enhance)” 정보를 저장
+    public StoreItemCategory baseCategory;
 
-    public int amount;      // 재고 수량 (0이면 무제한)
-    public EffectType effectType; // 효과 타입 (TodaySpecial일 때만 None 이외의 값)
+    // 캔버스상에서 카테고리(오늘의 상품으로 바뀌면 TodaySpecial)
+    public StoreItemCategory itemCategory;
+
+    public int price;
+    public int minPrice;
+    public int maxPrice;
+
+    public int amount;
+    public EffectType effectType;
 }

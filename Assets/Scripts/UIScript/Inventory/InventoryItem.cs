@@ -4,18 +4,11 @@ using UnityEngine;
 
 public class InventoryItem
 {
-    public Sprite icon;             // 아이템 아이콘
-    public int enhancementLevel;    // 강화 수치
-    public Rarity rarity;           // 등급 (Common ~ Legendary)
-    public ItemCategory category;   // 분류 (무기, 재료 등)
-}
-
-public enum Rarity
-{
-    Common,
-    Rare,
-    Epic,
-    Legendary
+    public Sprite icon;             // 아이템 아이콘 (상점에서 넘겨받은 Sprite)
+    public ItemCategory category;   // 분류 (Weapon, Enhancement 등)
+    public EffectType effectType;   // 능력 타입 (None / EasyMiniGame / NoBelowBQuality)
+    public int quantity;            // 인벤토리에 쌓인 수량 
+    public int acquireIndex;          // 획득 순서(클수록 나중에 획득했다는 의미)
 }
 
 public enum ItemCategory

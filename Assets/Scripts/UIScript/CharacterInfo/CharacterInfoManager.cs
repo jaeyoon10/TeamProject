@@ -223,7 +223,7 @@ public class CharacterInfoManager : MonoBehaviour
     {
         if (faceImage == null) return;
 
-        if (currentStress == 0)
+        if (currentStress < 3)
         {
             faceImage.sprite = faceNormal;
         }
@@ -231,7 +231,7 @@ public class CharacterInfoManager : MonoBehaviour
         {
             faceImage.sprite = faceHalf;
         }
-        else if (currentStress < maxStress)
+        else if (currentStress < 7)
         {
             faceImage.sprite = faceHalf;
         }
