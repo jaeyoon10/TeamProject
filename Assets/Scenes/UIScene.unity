@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657826, g: 0.49641263, b: 0.57481676, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -10260,7 +10260,7 @@ MonoBehaviour:
   enhanceTemplates:
   - icon: {fileID: 2353571312451627304, guid: 29243acfb820a2c4bbc18d922ca0c39f, type: 3}
     itemName: "\uCC45"
-    baseCategory: 0
+    baseCategory: 1
     itemCategory: 1
     price: 300
     minPrice: 150
@@ -10269,7 +10269,7 @@ MonoBehaviour:
     effectType: 0
   - icon: {fileID: -3017979480325208809, guid: 4373b5a1916f3a8468bc2b0fdefa655e, type: 3}
     itemName: "\uC5D0\uB108\uC9C0"
-    baseCategory: 0
+    baseCategory: 1
     itemCategory: 1
     price: 400
     minPrice: 230
