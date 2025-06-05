@@ -34,22 +34,11 @@ public class StoreItemSlotController : MonoBehaviour
 
     public void Init(StoreItemData itemData)
     {
-        // 1) Init 시작부에서 반드시 CanvasGroup을 확보하거나 추가
         canvasGroup = GetComponent<CanvasGroup>();
         if (canvasGroup == null)
         {
             canvasGroup = gameObject.AddComponent<CanvasGroup>();
         }
-        // 2) 필수 컴포넌트 검증
-        if (iconImage == null || nameText == null || priceText == null || amountText == null
-            || purchaseButton == null || backgroundImage == null)
-        {
-            Debug.LogError("[StoreItemSlotController] Init 호출 시 필수 컴포넌트가 할당되지 않음. " +
-                $"iconImage={iconImage}, nameText={nameText}, priceText={priceText}, " +
-                $"amountText={amountText}, purchaseButton={purchaseButton}, backgroundImage={backgroundImage}");
-            return;
-        }
-
         data = itemData;
 
         // 3) 아이콘/이름/가격 설정
