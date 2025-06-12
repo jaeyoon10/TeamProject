@@ -23,9 +23,15 @@ public class StoreItemSlotController : MonoBehaviour
     private InventoryUI inventoryUI;
     private CanvasGroup canvasGroup;
 
+    public CharacterInfoManager characterInfoManager; 
     private void Awake()
     {
         inventoryUI = FindObjectOfType<InventoryUI>();
+        characterInfoManager = FindObjectOfType<CharacterInfoManager>();
+        if (characterInfoManager == null)
+        {
+            Debug.LogWarning("[StoreItemSlot] 씬에 CharacterInfoManager가 없습니다.");
+        }
 
         canvasGroup = GetComponent<CanvasGroup>();
         if (canvasGroup == null)
@@ -125,6 +131,16 @@ public class StoreItemSlotController : MonoBehaviour
                 return;
             }
             // (무제한 상품이므로 재고 감소/품절 처리 없음)
+        }
+        // 씬에서 참조로 연결한 경우라면:
+        if (characterInfoManager != null)
+        {
+            characterInfoManager.AddStoreCost(data.price);
+            Debug.Log($"[SotreItemSlot] AddStoreCost 호출됨: {data.price}원");
+        }
+        else 
+        {
+            Debug.LogWarning("[StoreitemSlot] characterInfoManager가 할당되지 않음");
         }
 
         // 3) 인벤토리 카테고리 매핑

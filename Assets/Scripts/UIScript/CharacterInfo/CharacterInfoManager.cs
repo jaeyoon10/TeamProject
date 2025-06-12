@@ -8,21 +8,21 @@ public class CharacterInfoManager : MonoBehaviour
 {
     [Header("=== 캐릭터 초상화 ===")]
     public Image characterPortrait;       // PortraitFrame > CharacterPortrait
-    public bool preserveAspect = true;    // Inspector에서 켜둘 수도 있음
+    public bool preserveAspect = true;
 
     [Header("=== 레벨 & 경험치 ===")]
     public TMP_Text levelText;            // "LV.1" 표시
-    public Slider xpBar;                  // Slider (Min과 Max는 코드에서 세팅)
+    public Slider xpBar;                  // Slider (Min/Max는 코드에서 설정)
     public int currentLevel = 1;          // 초기 레벨 (LV.1)
     private int currentXP = 0;            // 현재 경험치 (게이지)
-    private int xpPerLevel;               // 현재 레벨에서 다음 레벨까지 필요한 경험치
+    private int xpPerLevel;               // 현재 레벨에서 다음 레벨까지 필요한 XP
 
     [Header("Level Up Effect")]
     public CanvasGroup levelUpCanvasGroup; // LevelUpEffect > LevelUpText의 CanvasGroup
-    public float levelUpFadeDuration = 0.5f; // 페이드 인/아웃 시간
+    public float levelUpFadeDuration = 0.5f;
 
     [Header("=== 스트레스 바 ===")]
-    public List<Image> stressSegments = new List<Image>(); // Segment_0 ~ Segment_N
+    public List<Image> stressSegments = new List<Image>(); // 스트레스 세그먼트 이미지 리스트
     public Color stressEmptyColor = new Color(1f, 0.92f, 0.02f, 1f);  // 노란색
     public Color stressFillColor = Color.red;                         // 빨간색
     private int currentStress = 0;         // 현재 스트레스 포인트
@@ -38,84 +38,85 @@ public class CharacterInfoManager : MonoBehaviour
     public TMP_Text dayText;     // "Day 1" 표시
     private int currentDay = 1;  // 초기 1일
 
+    [Header("=== 일일 수익/지출 누적 변수 ===")]
+    [Tooltip("하루 동안 무기 제작(판매)으로 벌어들인 금액(양수)")]
+    private int dailyProfit제작 = 0;
+
+    [Tooltip("퀘스트 완료 보상으로 받은 금액(양수)")]
+    private int dailyProfit의뢰 = 0;
+
+    [Tooltip("상점에서 재료를 구매하거나 판매할 때 지출된 금액(양수)")]
+    private int dailyCost상점 = 0;
+
+    [Tooltip("강화 재료 구매 등에 지출된 금액(양수)")]
+    private int dailyCost강화 = 0;
+
+    [Header("=== 의뢰 UI 매니저 참조 ===")]
+    [Tooltip("씬에 배치된 QuestUIManager를 드래그 연결하세요.")]
+    public QuestUIManager questUIManager;
+
+    [Header("=== DaySummary 매니저 참조 ===")]
+    [Tooltip("씬에 배치된 DaySummaryManager를 드래그 연결하세요.")]
+    public DaySummaryManager daySummaryManager;
+
     private void Awake()
     {
-        // 1) 초기 레벨용 필요 경험치 계산
+        // 1) 경험치 세팅
         xpPerLevel = CalculateXPForNextLevel(currentLevel);
-
-        // 2) XP Bar 세팅
         xpBar.minValue = 0;
         xpBar.maxValue = xpPerLevel;
         xpBar.value = currentXP;
 
-        // 3) 레벨 텍스트 초기화
+        // 2) 레벨 텍스트 초기화
         UpdateLevelText();
 
-        // 4) 레벨업 이펙트 숨김
+        // 3) 레벨업 이펙트 숨김
         if (levelUpCanvasGroup != null)
             levelUpCanvasGroup.alpha = 0;
 
-        // 5) 스트레스 세그먼트 색깔 초기화
+        // 4) 스트레스 세그먼트 초기화(모두 empty 색)
         maxStress = stressSegments.Count;
         for (int i = 0; i < maxStress; i++)
         {
             stressSegments[i].color = stressEmptyColor;
         }
 
-        // 6) 표정 초기화
+        // 5) 표정 초기화
         if (faceImage != null && faceNormal != null)
             faceImage.sprite = faceNormal;
 
-        // 7) 날짜 초기화
+        // 6) 날짜 초기화
         UpdateDayText();
     }
 
-    #region ======== 캐릭터 초상화 설정 ========
-    /// <summary>
-    /// 외부에서 선택된 캐릭터 스프라이트를 전달하면, 흰색 프레임에 꽉 차도록 교체
-    /// </summary>
-    /// <param name="newPortrait">새로 표시할 스프라이트</param>
+    #region ======== 캐릭터 초상화 ========
     public void SetCharacterPortrait(Sprite newPortrait)
     {
         if (characterPortrait == null || newPortrait == null) return;
-
         characterPortrait.sprite = newPortrait;
         characterPortrait.preserveAspect = preserveAspect;
     }
     #endregion
 
     #region ======== 경험치(EXP) & 레벨 ========
-    /// <summary>
-    /// 경험치를 추가하고, 레벨업 가능 시 레벨업 처리 (게이지 초기화)
-    /// </summary>
-    /// <param name="amount">추가할 경험치</param>
     public void AddXP(int amount)
     {
         if (amount <= 0) return;
 
         currentXP += amount;
 
-        // 레벨업 조건: 누적된 currentXP가 필요 경험치 이상이면 곧바로 레벨업
         if (currentXP >= xpPerLevel)
         {
-            // 1) 게이지를 초기화 (나머지 경험치 부여하지 않음)
+            // 레벨업: 남은 XP는 버리고 게이지 초기화
             currentXP = 0;
-
-            // 2) 레벨업 처리 (currentLevel 증가 + 텍스트/이펙트)
             LevelUpRoutine();
-
-            // 3) 다음 레벨 필요 경험치 다시 계산
             xpPerLevel = CalculateXPForNextLevel(currentLevel);
         }
 
-        // 4) Slider 업데이트 (Max가 변경되었을 수도 있으므로 반드시 재할당)
         xpBar.maxValue = xpPerLevel;
         xpBar.value = currentXP;
     }
 
-    /// <summary>
-    /// 레벨업 처리: 레벨 증가, 텍스트 갱신, 레벨업 UI 이펙트 실행
-    /// </summary>
     private void LevelUpRoutine()
     {
         currentLevel++;
@@ -134,7 +135,7 @@ public class CharacterInfoManager : MonoBehaviour
         if (levelUpCanvasGroup == null)
             yield break;
 
-        // 페이드 인
+        // Fade In
         float t = 0f;
         while (t < levelUpFadeDuration)
         {
@@ -143,10 +144,10 @@ public class CharacterInfoManager : MonoBehaviour
             yield return null;
         }
 
-        // 잠시 대기 (1초)
+        // 잠시 대기
         yield return new WaitForSeconds(1f);
 
-        // 페이드 아웃
+        // Fade Out
         t = 0f;
         while (t < levelUpFadeDuration)
         {
@@ -154,84 +155,57 @@ public class CharacterInfoManager : MonoBehaviour
             levelUpCanvasGroup.alpha = Mathf.Lerp(1f, 0f, t / levelUpFadeDuration);
             yield return null;
         }
+
         levelUpCanvasGroup.alpha = 0f;
     }
 
-    /// <summary>
-    /// 현재 레벨에서 다음 레벨로 올라가기 위해 필요한 경험치를 계산
-    ///  - LV1→2: 100
-    ///  - LV2→3: 130 (+30)
-    ///  - LV3→4: 150 (+20)
-    ///  - LV4→5: 180 (+30)
-    ///  - LV5→6: 200 (+20)
-    ///  ...
-    /// 홀수 레벨에서 짝수 레벨로 갈 때 +30, 짝수 레벨에서 홀수 레벨로 갈 때 +20을 적용합니다.
-    /// </summary>
     private int CalculateXPForNextLevel(int level)
     {
-        // level = 현재 레벨 (예: 1), 반환값 = “level → level+1” 에 필요한 XP
         int baseXP = 100;
+        if (level == 1)
+            return baseXP;
 
-        // level이 1일 때 그대로 100 반환
-        if (level == 1) return baseXP;
-
-        // level > 1인 경우, 1→2 까지는 100을 기준으로 했으니
-        // 2→3: +30, 3→4: +20, 4→5: +30, ... 을 반복해서 더함
-        // 반복문을 level-1 번 수행해서 최종 누적값을 구함
         int xpNeeded = baseXP;
         for (int lv = 1; lv < level; lv++)
         {
-            // lv이 홀수면 다음 레벨로 넘어갈 때 +30
             if (lv % 2 == 1)
                 xpNeeded += 30;
             else
                 xpNeeded += 20;
         }
-
         return xpNeeded;
     }
     #endregion
 
-    #region ======== 스트레스 게이지 & 날짜 ========
-    /// <summary>
-    /// 스트레스 포인트를 1만큼 쌓는다. 
-    /// 스트레스가 max에 도달하면 날짜 변경 처리.
-    /// </summary>
+    #region ======== 스트레스 & 날짜 ========
     public void AddStressPoint()
     {
         if (currentStress >= maxStress)
             return;
 
-        // 1포인트 추가
+        // 1) 스트레스 1포인트 추가 (fill 색으로 변경)
         stressSegments[currentStress].color = stressFillColor;
         currentStress++;
 
+        // 2) 표정 업데이트
         UpdateFaceSprite();
 
-        // 만약 가득 찼다면
+        // 3) 만약 스트레스가 max에 도달했다면 하루 종료
         if (currentStress >= maxStress)
         {
-            // 하루가 지나가도록 처리
             StartCoroutine(OnStressMaxRoutine());
         }
     }
 
-    /// <summary>
-    /// 표정 이미지를 스트레스 정도에 따라 변경
-    /// </summary>
     private void UpdateFaceSprite()
     {
         if (faceImage == null) return;
 
-        if (currentStress < 3)
+        if (currentStress < maxStress * 0.3f)
         {
             faceImage.sprite = faceNormal;
         }
-        else if (currentStress < maxStress / 2f)
-        {
-            faceImage.sprite = faceHalf;
-        }
-        else if (currentStress < 7)
+        else if (currentStress < maxStress * 0.7f)
         {
             faceImage.sprite = faceHalf;
         }
@@ -241,26 +215,28 @@ public class CharacterInfoManager : MonoBehaviour
         }
     }
 
-    /// <summary>
-    /// 스트레스 바가 가득 찼을 때 호출되는 코루틴
-    /// → 하루가 지나고 스트레스 초기화
-    /// </summary>
     private IEnumerator OnStressMaxRoutine()
     {
-        // 예: “하루가 지났습니다!” 같은 메시지나 이펙트를 넣고 싶으면 이곳에 추가
+        // 스트레스 MAX 알림(1초 대기)
         yield return new WaitForSeconds(1f);
 
-        // 날짜 증가
-        currentDay++;
-        UpdateDayText();
-
-        // 스트레스 초기화(색 복원)
-        for (int i = 0; i < maxStress; i++)
+        Debug.Log($"[StressMaxRoutine] 호출됨 → 제작={dailyProfit제작}, 의뢰={dailyProfit의뢰}, 상점={dailyCost상점}, 강화={dailyCost강화}");
+        // 1) 하루 동안 누적된 수익/지출을 DaySummaryManager에 전달
+        if (daySummaryManager != null)
         {
-            stressSegments[i].color = stressEmptyColor;
+            daySummaryManager.ShowDaySummary(
+                profit제작: dailyProfit제작,
+                profit의뢰: dailyProfit의뢰,
+                cost상점: dailyCost상점,
+                cost강화: dailyCost강화
+            );
         }
-        currentStress = 0;
-        UpdateFaceSprite();
+        else
+        {
+            Debug.LogWarning("[CharacterInfoManager] daySummaryManager가 할당되지 않음");
+        }
+
+        // (스트레스는 Confirm 버튼 클릭 시 초기화할 예정)
 
         yield break;
     }
@@ -270,9 +246,51 @@ public class CharacterInfoManager : MonoBehaviour
         if (dayText != null)
             dayText.text = $"Day {currentDay}";
     }
+
     #endregion
 
-    #region ======== 테스트용 입력 예시 ========
+    #region ======== 일일 수익/지출 기록 메서드 ========
+    // 아래 메서드들은 “무기 제작을 판매했을 때”, “퀘스트 완료했을 때”,
+    // “상점에서 재료 구매했을 때”, “강화에 돈을 썼을 때” 등을 호출하여 누적 값을 더하는 용도입니다.
+
+    /// <summary>
+    /// 무기 제작(판매)을 통해 얻은 금액만큼 누적
+    /// </summary>
+    public void AddProductionProfit(int amount)
+    {
+        if (amount <= 0) return;
+        dailyProfit제작 += amount;
+    }
+
+    /// <summary>
+    /// 의뢰(퀘스트) 완료로 받은 보상 금액만큼 누적
+    /// </summary>
+    public void AddQuestProfit(int amount)
+    {
+        if (amount <= 0) return;
+        dailyProfit의뢰 += amount;
+    }
+
+    /// <summary>
+    /// 상점에서 재료 구매 등에 지출한 금액만큼 누적
+    /// </summary>
+    public void AddStoreCost(int amount)
+    {
+        if (amount <= 0) return;
+        dailyCost상점 += amount;
+    }
+
+    /// <summary>
+    /// 강화(재료 구매 등)로 지출한 금액만큼 누적
+    /// </summary>
+    public void AddEnhanceCost(int amount)
+    {
+        if (amount <= 0) return;
+        dailyCost강화 += amount;
+    }
+    #endregion
+
+    #region ======== 테스트용 ContextMenu 메서드 ========
     [ContextMenu("테스트: 경험치 +120")]
     public void TestAddXP120()
     {
@@ -283,6 +301,55 @@ public class CharacterInfoManager : MonoBehaviour
     public void TestAddStress()
     {
         AddStressPoint();
+    }
+
+    [ContextMenu("테스트: 제작 수익 +5000")]
+    public void TestAddProdProfit()
+    {
+        AddProductionProfit(5000);
+    }
+
+    [ContextMenu("테스트: 퀘스트 수익 +3000")]
+    public void TestAddQuestProfit()
+    {
+        AddQuestProfit(3000);
+    }
+
+    [ContextMenu("테스트: 상점 지출 2000")]
+    public void TestAddStoreCost()
+    {
+        AddStoreCost(2000);
+    }
+
+    [ContextMenu("테스트: 강화 지출 1000")]
+    public void TestAddEnhanceCost()
+    {
+        AddEnhanceCost(1000);
+    }
+    #endregion
+
+    #region ======== 스트레스 초기화 & 다음 날 호출(Confirm 버튼 시) ========
+    /// <summary>
+    /// 다음 날로 넘어갈 때 스트레스 초기화, 날짜 증가, 수익/지출 초기화 등.
+    /// DaySummaryManager의 Confirm 버튼 클릭 시 호출할 메서드.
+    /// </summary>
+    public void ResetForNextDay()
+    {
+        // 1) 날짜 증가
+        currentDay++;
+        UpdateDayText();
+
+        // 2) 스트레스 초기화 (색 복원 및 변수 초기화)
+        for (int i = 0; i < maxStress; i++)
+            stressSegments[i].color = stressEmptyColor;
+        currentStress = 0;
+        UpdateFaceSprite();
+
+        // 3) 일일 수익/지출 초기화 (다음 날 데이터를 새로 기록)
+        dailyProfit제작 = 0;
+        dailyProfit의뢰 = 0;
+        dailyCost상점 = 0;
+        dailyCost강화 = 0;
     }
     #endregion
 }

@@ -7905,7 +7905,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 3bacacce25197b0438282977524e11f6, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  characterPortrait: {fileID: 0}
+  characterPortrait: {fileID: 529248123}
   preserveAspect: 1
   levelText: {fileID: 2016692737}
   xpBar: {fileID: 1918970439}
@@ -7930,6 +7930,8 @@ MonoBehaviour:
   faceMax: {fileID: 21300000, guid: cca59157faf806e4d9ad67adfbfeae73, type: 3}
   faceImage: {fileID: 196580126}
   dayText: {fileID: 599314977}
+  questUIManager: {fileID: 902420232}
+  daySummaryManager: {fileID: 1095475922}
 --- !u!1 &751511273
 GameObject:
   m_ObjectHideFlags: 0
@@ -10742,6 +10744,76 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1081797556}
   m_CullTransparentMesh: 1
+--- !u!1 &1095475920
+GameObject:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  serializedVersion: 6
+  m_Component:
+  - component: {fileID: 1095475921}
+  - component: {fileID: 1095475922}
+  m_Layer: 5
+  m_Name: DayManager
+  m_TagString: Untagged
+  m_Icon: {fileID: 0}
+  m_NavMeshLayer: 0
+  m_StaticEditorFlags: 0
+  m_IsActive: 1
+--- !u!224 &1095475921
+RectTransform:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1095475920}
+  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalScale: {x: 1, y: 1, z: 1}
+  m_ConstrainProportionsScale: 0
+  m_Children: []
+  m_Father: {fileID: 1360451131}
+  m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
+  m_AnchoredPosition: {x: 0, y: 0}
+  m_SizeDelta: {x: 100, y: 100}
+  m_Pivot: {x: 0.5, y: 0.5}
+--- !u!114 &1095475922
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1095475920}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 113327731502ab64c8d756d1e4d4b08a, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  daySummaryPanel: {fileID: 1360451130}
+  dayText: {fileID: 533132608}
+  "\uC81C\uC791_Background": {fileID: 493285525}
+  "\uC81C\uC791_CategoryText": {fileID: 706398967}
+  "\uC81C\uC791_AmountText": {fileID: 1336407444}
+  "\uC758\uB8B0_Background": {fileID: 1265629079}
+  "\uC758\uB8B0_CategoryText": {fileID: 2024406099}
+  "\uC758\uB8B0_AmountText": {fileID: 1038812799}
+  "\uC0C1\uC810_Background": {fileID: 699776831}
+  "\uC0C1\uC810_CategoryText": {fileID: 1895330210}
+  "\uC0C1\uC810_AmountText": {fileID: 1611965037}
+  "\uAC15\uD654_Background": {fileID: 1677653634}
+  "\uAC15\uD654_CategoryText": {fileID: 1781949528}
+  "\uAC15\uD654_AmountText": {fileID: 728195964}
+  "\uCD1D\uD569_Background": {fileID: 60819767}
+  "\uCD1D\uD569_CategoryText": {fileID: 876068576}
+  "\uCD1D\uD569_AmountText": {fileID: 1367478852}
+  confirmButton: {fileID: 1211097582}
+  playerLevel: 1
+  currentDay: 1
+  questUIManager: {fileID: 902420232}
+  characterInfoManager: {fileID: 742851386}
 --- !u!1 &1105303625
 GameObject:
   m_ObjectHideFlags: 0
@@ -13671,8 +13743,8 @@ MonoBehaviour:
   m_OnCullStateChanged:
     m_PersistentCalls:
       m_Calls: []
-  m_Sprite: {fileID: 0}
-  m_Type: 0
+  m_Sprite: {fileID: 4211293783942383924, guid: a64f98d7a00501442ae40845562f1c20, type: 3}
+  m_Type: 1
   m_PreserveAspect: 0
   m_FillCenter: 1
   m_FillMethod: 4
@@ -13701,7 +13773,7 @@ GameObject:
   - component: {fileID: 1360451133}
   - component: {fileID: 1360451132}
   m_Layer: 5
-  m_Name: "DayPanel \uC544\uC9C1 \uC548\uB40C"
+  m_Name: DayPanel
   m_TagString: Untagged
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
@@ -13719,6 +13791,7 @@ RectTransform:
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_ConstrainProportionsScale: 0
   m_Children:
+  - {fileID: 1095475921}
   - {fileID: 1347163668}
   - {fileID: 1211097581}
   m_Father: {fileID: 1684817482}
