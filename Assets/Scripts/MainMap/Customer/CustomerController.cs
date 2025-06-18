@@ -1,3 +1,4 @@
+using System.Buffers.Text;
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
@@ -79,7 +80,7 @@ public class CustomerController : MonoBehaviour
         Debug.Log($"[Customer] XP Gained: {xpGain}");
 
 
-        int stressGain = Random.Range(6, 8);
+        int stressGain = Random.Range(0, 3);
         for (int i = 0; i < stressGain; i++)
             CharacterInfoManager.Instance.AddStressPoint();
         // 3) 퇴장
@@ -98,6 +99,12 @@ public class CustomerController : MonoBehaviour
 
     private int CalculateXP(int baseXP, int score)
     {
+        Debug.Log($"[CalculateXP] baseXP={baseXP}, score={score}");
+        if (baseXP <= 0)
+        {
+            Debug.LogWarning("[CalculateXP] baseXP가 0 이하! 10으로 대체");
+            baseXP = 10;
+        }
         float ratio;
         if (score >= 100) ratio = 5.0f;    // 10 경치
         else if (score >= 80) ratio = 3.0f; //  80%
@@ -106,14 +113,9 @@ public class CustomerController : MonoBehaviour
         else if (score >= 10) ratio = 0.5f; //  10%
         else ratio = 0.1f;                //   5%
 
-        return Mathf.RoundToInt(baseXP * ratio);
-    }
-
-    int CalculateXP(RecipeData recipe, int score)
-    {
-        // RecipeData에 추가한 baseXP 필드를 사용
-        float ratio = score / 100f;
-        return Mathf.RoundToInt(recipe.baseXP * ratio);
+        int result = Mathf.RoundToInt(baseXP * ratio);
+        Debug.Log($"[CalculateXP] ratio={ratio:F2}, result={result}");
+        return result;
     }
 
     IEnumerator Depart()

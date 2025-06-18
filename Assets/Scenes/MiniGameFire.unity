@@ -307,7 +307,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   moveArea: {fileID: 1738921710}
   minSpeed: 250
-  maxSpeed: 650
+  maxSpeed: 500
   changeInterval: 1.3
 --- !u!1 &229271404
 GameObject:
@@ -695,7 +695,7 @@ MonoBehaviour:
   progressSlider: {fileID: 1345946504}
   perfectText: {fileID: 254719027}
   fillSpeed: 0.4
-  drainSpeed: 0.5
+  drainSpeed: 0.2
 --- !u!1 &755886632
 GameObject:
   m_ObjectHideFlags: 0
