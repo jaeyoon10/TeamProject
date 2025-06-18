@@ -344,7 +344,7 @@ Camera:
   m_GameObject: {fileID: 229271404}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 2
+  m_ClearFlags: 1
   m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
@@ -842,7 +842,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 0}
+  m_TargetGraphic: {fileID: 1891519567}
   m_FillRect: {fileID: 1562442080}
   m_HandleRect: {fileID: 0}
   m_Direction: 0

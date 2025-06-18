@@ -22,6 +22,7 @@ public class CraftingUI : MonoBehaviour
     public Transform ingContainer;    // IngContainer
     public GameObject ingPrefab;       // IngItem 프리팹
 
+    private RecipeData selectedRecipe;
     private void Awake()
     {
         if (Instance == null) Instance = this;
@@ -51,6 +52,8 @@ public class CraftingUI : MonoBehaviour
     // 2) RecipeSlot 클릭 시 호출
     public void ShowDetail(RecipeData rd)
     {
+        selectedRecipe = rd; 
+
         detailPanel.SetActive(true);
 
         // 이미지·이름·레벨
@@ -78,5 +81,15 @@ public class CraftingUI : MonoBehaviour
     public void CloseList()
     {
         recipeScrollView.SetActive(false);
+    }
+
+    public void OnClickCraft()
+    {
+        CraftingRecipeExecutor exec = FindObjectOfType<CraftingRecipeExecutor>();
+        exec.SetSelectedRecipe(selectedRecipe);
+        exec.OnClickCraft();
+
+        recipeScrollView.SetActive(false);
+        detailPanel.SetActive(false);
     }
 }

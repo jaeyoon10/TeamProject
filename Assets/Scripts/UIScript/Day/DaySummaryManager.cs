@@ -53,6 +53,8 @@ public class DaySummaryManager : MonoBehaviour
     // 스트레스 관리 및 누적 초기화를 위해 CharacterInfoManager 참조
     public CharacterInfoManager characterInfoManager;
 
+    public StoreSlotLoader storeSlotLoader;
+
     private void Awake()
     {
         // DaySummaryPanel은 처음에 비활성화
@@ -62,8 +64,6 @@ public class DaySummaryManager : MonoBehaviour
         // Confirm 버튼 이벤트 연결
         if (confirmButton != null)
             confirmButton.onClick.AddListener(OnConfirmButtonClicked);
-
-        // 각 CategoryText들은 Inspector에서 미리 “제작”, “의뢰”, “상점”, “강화”, “총합”으로 설정해 두세요.
     }
 
     /// <summary>
@@ -143,6 +143,15 @@ public class DaySummaryManager : MonoBehaviour
         {
             characterInfoManager.ResetForNextDay();
         }
+        // 5) 상점 완전 리프레시
+        if (storeSlotLoader != null)
+        {
+            storeSlotLoader.RefreshAll();
+        }
+        else
+        {
+            Debug.LogWarning("[DaySummaryManager] storeSlotLoader가 할당되지 않았습니다!");
+        };
     }
 
     /// <summary>

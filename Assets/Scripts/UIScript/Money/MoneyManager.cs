@@ -28,7 +28,7 @@ public class MoneyManager : MonoBehaviour
         }
 
         Instance = this;
-        DontDestroyOnLoad(gameObject); // 씬 전환 시에도 파괴되지 않게
+       
 
         // 초기 골드 설정
         currentGold = startingGold;
@@ -92,11 +92,11 @@ public class MoneyManager : MonoBehaviour
     }
 
     #region 테스트용 ContextMenu
-    [ContextMenu("테스트: 골드 +50")]
-    public void TestAdd50()
+    [ContextMenu("테스트: 골드 +10000")]
+    public void TestAdd10000()
     {
-        AddGold(50);
-        Debug.Log($"테스트: 골드 +50 → 현재 골드 = {currentGold}");
+        AddGold(10000);
+        Debug.Log($"테스트: 골드 +10000 → 현재 골드 = {currentGold}");
     }
 
     [ContextMenu("테스트: 골드 -30")]

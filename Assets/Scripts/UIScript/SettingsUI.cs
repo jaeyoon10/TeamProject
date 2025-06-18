@@ -17,9 +17,20 @@ public class SettingsUI : MonoBehaviour
     private Resolution[] options;
     [Header("창 모드")]
     public Toggle windowToggle;
+    [Header("Settings UI")]
+    public Button saveButton;
 
     void Start()
     {
+
+        if (saveButton == null)
+        {
+            Debug.LogError("[SettingsUI] SaveButton 할당 필요!");
+            return;
+        }
+
+        saveButton.onClick.AddListener(OnSaveClicked);
+
         // 1) 최초 값 로드
         panel.SetActive(false);
         // AudioMixer 파라미터 불러오기
@@ -84,6 +95,18 @@ public class SettingsUI : MonoBehaviour
     void SetWindowMode(bool isWindowed)
     {
         Screen.fullScreen = !isWindowed;
+    }
+    private void OnSaveClicked()
+    {
+        if (GameSession.Instance == null)
+        {
+            Debug.LogError("GameSession 인스턴스를 찾을 수 없습니다.");
+            return;
+        }
+
+        GameSession.Instance.SaveState();
+        Debug.Log("SettingsUI: 게임 상태를 저장했습니다.");
+        // (선택) 사용자 피드백용 팝업/토스트 띄우기
     }
 
     public void QuitGame()

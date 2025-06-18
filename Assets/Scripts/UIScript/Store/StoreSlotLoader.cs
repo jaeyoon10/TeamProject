@@ -1,5 +1,8 @@
+using System;
 using System.Collections.Generic;
 using UnityEngine;
+using System.Linq;
+using Random = UnityEngine.Random;
 
 public class StoreSlotLoader : MonoBehaviour
 {
@@ -35,6 +38,12 @@ public class StoreSlotLoader : MonoBehaviour
     [Tooltip("특가 상품 생성 시 오늘의 상품 전용 아이템이 섞일 확률 (예: 0.05 = 5%)")]
     public float chanceToIncludeTodayItemInSpecial = 0.05f;
 
+    // (1) 세이브 시 현재 리스트를 꺼내올 수 있도록 public 프로퍼티 노출
+    public List<StoreItemData> CurrentSpecialOffers => currentSpecialOffers;
+    public List<StoreItemData> CurrentMaterialItems => currentMaterialItems;
+    public List<StoreItemData> CurrentEnhanceItems => currentEnhanceItems;
+    public List<StoreItemData> CurrentTodayItems => currentTodayItems;
+
     void Start()
     {
         // 1) 최초 실행 시, 재료/강화 상점 템플릿 복사
@@ -47,19 +56,109 @@ public class StoreSlotLoader : MonoBehaviour
     }
 
     /// <summary>
-    /// 스트레스 MAX → 다음 날 갱신할 때 호출
+    /// 저장된 데이터에서 복원할 때 호출
+    /// </summary>
+    public void LoadFromSave(
+        List<StoreItemRecord> special,
+        List<StoreItemRecord> material,
+        List<StoreItemRecord> enhance,
+        List<StoreItemRecord> today)
+    {
+        // 1) DTO → StoreItemData 변환
+        currentSpecialOffers = special.Select(r => new StoreItemData
+        {
+            icon = Resources.Load<Sprite>(r.iconName),
+            itemName = r.iconName,  // 필요하다면 별도 이름 필드로 바꾸세요
+            baseCategory = Enum.Parse<StoreItemCategory>(r.baseCategory),
+            itemCategory = Enum.Parse<StoreItemCategory>(r.itemCategory),
+            price = r.price,
+            minPrice = r.price,
+            maxPrice = r.price,
+            amount = r.amount,
+            effectType = Enum.Parse<EffectType>(r.effectType)
+        }).ToList();
+
+        currentMaterialItems = material.Select(r => new StoreItemData
+        {
+            icon = Resources.Load<Sprite>(r.iconName),
+            itemName = r.iconName,
+            baseCategory = Enum.Parse<StoreItemCategory>(r.baseCategory),
+            itemCategory = Enum.Parse<StoreItemCategory>(r.itemCategory),
+            price = r.price,
+            minPrice = r.price,
+            maxPrice = r.price,
+            amount = r.amount,
+            effectType = Enum.Parse<EffectType>(r.effectType)
+        }).ToList();
+
+        currentEnhanceItems = enhance.Select(r => new StoreItemData
+        {
+            icon = Resources.Load<Sprite>(r.iconName),
+            itemName = r.iconName,
+            baseCategory = Enum.Parse<StoreItemCategory>(r.baseCategory),
+            itemCategory = Enum.Parse<StoreItemCategory>(r.itemCategory),
+            price = r.price,
+            minPrice = r.price,
+            maxPrice = r.price,
+            amount = r.amount,
+            effectType = Enum.Parse<EffectType>(r.effectType)
+        }).ToList();
+
+        currentTodayItems = today.Select(r => new StoreItemData
+        {
+            icon = Resources.Load<Sprite>(r.iconName),
+            itemName = r.iconName,
+            baseCategory = Enum.Parse<StoreItemCategory>(r.baseCategory),
+            itemCategory = Enum.Parse<StoreItemCategory>(r.itemCategory),
+            price = r.price,
+            minPrice = r.price,
+            maxPrice = r.price,
+            amount = r.amount,
+            effectType = Enum.Parse<EffectType>(r.effectType)
+        }).ToList();
+
+        // 2) 화면에 그대로 뿌려주기 (랜덤 생성 로직 건너뜀)
+        ClearChildren(specialOfferParent);
+        LoadList(currentSpecialOffers, specialOfferParent, slotSpecialPrefab);
+
+        ClearChildren(materialParent);
+        LoadList(currentMaterialItems, materialParent, slotNormalPrefab);
+
+        ClearChildren(enhanceParent);
+        LoadList(currentEnhanceItems, enhanceParent, slotNormalPrefab);
+
+        ClearChildren(todayBgParent);
+        LoadList(currentTodayItems, todayBgParent, slotNormalPrefab);
+    }
+
+    /// <summary>
+    /// 저장 없는 일반 리프레시 (랜덤 생성)
     /// </summary>
     public void RefreshAll()
     {
-        GenerateSpecialOffers();                                  // 특가 상품 3개
-        UpdatePriceList(materialTemplates, currentMaterialItems); // 재료 상점 가격 변동
-        UpdatePriceList(enhanceTemplates, currentEnhanceItems);  // 강화 상점 가격 변동
-        GenerateTodayItems();                                     // 오늘의 상품 6개
+        // 1) 재료/강화 상점 리스트 완전 초기화
+        currentMaterialItems.Clear();
+        currentEnhanceItems.Clear();
+        CloneTemplates(materialTemplates, currentMaterialItems, false);
+        CloneTemplates(enhanceTemplates, currentEnhanceItems, false);
 
-        // UI에 슬롯 생성
+        // 2) 특가 및 오늘의 상품, 가격 새로 생성
+        GenerateSpecialOffers();
+        UpdatePriceList(materialTemplates, currentMaterialItems);
+        UpdatePriceList(enhanceTemplates, currentEnhanceItems);
+        GenerateTodayItems();
+
+        // 3) 화면에 새로 뿌리기
+        ClearChildren(specialOfferParent);
         LoadList(currentSpecialOffers, specialOfferParent, slotSpecialPrefab);
+
+        ClearChildren(materialParent);
         LoadList(currentMaterialItems, materialParent, slotNormalPrefab);
+
+        ClearChildren(enhanceParent);
         LoadList(currentEnhanceItems, enhanceParent, slotNormalPrefab);
+
+        ClearChildren(todayBgParent);
         LoadList(currentTodayItems, todayBgParent, slotNormalPrefab);
     }
 
@@ -261,7 +360,7 @@ public class StoreSlotLoader : MonoBehaviour
     /// 부모 Transform의 자식 모두 삭제
     /// </summary>
     void ClearChildren(Transform parent)
-    {
+    { 
         for (int i = parent.childCount - 1; i >= 0; i--)
         {
             Destroy(parent.GetChild(i).gameObject);

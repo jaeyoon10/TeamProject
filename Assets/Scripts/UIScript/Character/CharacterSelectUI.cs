@@ -74,11 +74,19 @@ public class CharacterSelectUI : MonoBehaviour
 
     public void OnClickSelect() // "캐릭터 선택" 버튼을 누르면 호출됨
     {
-        Debug.Log($"{selectedCharacter} 선택됨!");
+        if (string.IsNullOrEmpty(selectedCharacter))
+        {
+            Debug.LogWarning("선택된 캐릭터가 없습니다!");
+            return;
+        }
 
-        // 씬 이동
-        UnityEngine.SceneManagement.SceneManager.LoadScene("UIScene");
+        // 1) 선택 정보 저장
+        PlayerPrefs.SetString("SelectedCharacter", selectedCharacter);
+        PlayerPrefs.Save();
 
+        Debug.Log($"{selectedCharacter} 선택됨! → PlayerPrefs에 저장");
+        // 2) 게임 씬 로드
+        UnityEngine.SceneManagement.SceneManager.LoadScene("Ingame_main");
     }
 
     public void OnClickSceneBack()

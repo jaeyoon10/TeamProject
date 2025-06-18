@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class SliderController : MonoBehaviour
@@ -14,6 +15,8 @@ public class SliderController : MonoBehaviour
     public float drainSpeed = 0.3f;
 
     private bool isGameEnded = false;
+
+    public System.Action onMiniGameSuccess;
 
     void Update()
     {
@@ -53,8 +56,18 @@ public class SliderController : MonoBehaviour
     {
         isGameEnded = true;
 
-        // 여기에 미니게임 종료 로직을 넣어도 됨
-        // 예: 게임오브젝트 끄기, 이벤트 전송, 상위 매니저 호출 등
-        // gameObject.SetActive(false);
+        ShowPerfect();
+
+        onMiniGameSuccess?.Invoke();
+
+        // 언로드 전에 딜레이를 주도록 코루틴 실행
+        StartCoroutine(DelayedUnload());
+    }
+
+    private IEnumerator DelayedUnload()
+    {
+        // 0.5초 동안 피드백이 유지됩니다
+        yield return new WaitForSeconds(1f);
+        SceneManager.UnloadSceneAsync("MiniGameFire");
     }
 }

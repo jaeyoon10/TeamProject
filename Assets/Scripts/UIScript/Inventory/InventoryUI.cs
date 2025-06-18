@@ -16,19 +16,21 @@ public class InventoryUI : MonoBehaviour
     public Button filterQuestButton;
 
     [Header("정렬 & 획득 순 버튼")]
-    public Button sortButton;   // 능력 있는 재료 우선 ↔ 일반 재료 우선
-    public Button orderButton;  // 최신 ↔ 최초
+    public Button sortButton;   // 효과 있는 재료 우선 ↔ 일반 재료 우선
+    public Button orderButton;  // 최신 ↔ 최초 획득 순
 
     [Header("아이템 데이터 (런타임)")]
     public List<InventoryItem> allItems;
 
-    private bool filterActive = false;
-    private ItemCategory currentCategory = ItemCategory.Weapon;
+    // 필터 관련
+    private bool filterActive = false;               // 카테고리 필터가 켜져 있는지
+    private ItemCategory currentCategory;            // 적용된 카테고리
 
+    // 정렬 모드
     private enum SortMode { None, Effect, Acquisition }
     private SortMode sortMode = SortMode.None;
-    private bool effectFirst = true;
-    private bool newestFirst = true;
+    private bool effectFirst = true;    // 효과 재료 우선 모드 토글 플래그
+    private bool newestFirst = true;    // 획득 순 토글 플래그
 
     private void Awake()
     {
@@ -37,24 +39,25 @@ public class InventoryUI : MonoBehaviour
 
     private void Start()
     {
+        // 필터 버튼
         filterWeaponButton.onClick.AddListener(() => OnFilterCategory(ItemCategory.Weapon));
         filterEnhancementButton.onClick.AddListener(() => OnFilterCategory(ItemCategory.Enhancement));
         filterGeneralButton.onClick.AddListener(() => OnFilterCategory(ItemCategory.General));
         filterQuestButton.onClick.AddListener(() => OnFilterCategory(ItemCategory.Quest));
 
+        // 정렬 버튼
         sortButton.onClick.AddListener(OnToggleEffectSort);
         orderButton.onClick.AddListener(OnToggleAcquisitionSort);
 
-        // 최초에는 “전체” 표시
+        // 최초 열 때는 전체 표시
         filterActive = false;
         Refresh();
     }
 
     private void OnEnable()
     {
-        // 인벤토리 UI를 켤 때마다 무조건 “전체” 상태로 돌아오게
+        // 인벤토리 패널을 열 때마다 **카테고리 필터만** 초기화
         filterActive = false;
-        // (currentCategory 값은 사용되지 않으므로 초기값 유지해도 상관없음)
         Refresh();
     }
 
@@ -93,22 +96,18 @@ public class InventoryUI : MonoBehaviour
         Refresh();
     }
 
-    private void Refresh()
+    public void Refresh()
     {
         // 1) 기존 슬롯 전부 제거
         foreach (Transform child in content)
             Destroy(child.gameObject);
 
-        // 2) 필터링(전체 or 특정 카테고리)
+        // 2) 필터링 (전체 vs 선택 카테고리) + 재고 0 이하 아이템 제외
         List<InventoryItem> filtered;
-        if (!filterActive)
-        {
-            filtered = new List<InventoryItem>(allItems);
-        }
+        if (filterActive)
+            filtered = allItems.FindAll(x => x.category == currentCategory && x.quantity > 0);
         else
-        {
-            filtered = allItems.FindAll(x => x.category == currentCategory);
-        }
+            filtered = allItems.FindAll(x => x.quantity > 0);
 
         // 3) 정렬 적용
         switch (sortMode)
@@ -140,12 +139,13 @@ public class InventoryUI : MonoBehaviour
                 if (newestFirst)
                     filtered.Reverse();
                 break;
+
             case SortMode.None:
             default:
                 break;
         }
 
-        // 4) 슬롯 생성 & Init
+        // 4) 슬롯 생성 & Init 호출
         foreach (var item in filtered)
         {
             var slotGO = Instantiate(itemSlotPrefab, content);
@@ -157,20 +157,15 @@ public class InventoryUI : MonoBehaviour
     {
         var existing = allItems.Find(x => x.icon == icon && x.category == category && x.effectType == effectType);
         if (existing != null)
-        {
             existing.quantity += 1;
-        }
         else
-        {
-            var newItem = new InventoryItem
+            allItems.Add(new InventoryItem
             {
                 icon = icon,
                 category = category,
                 effectType = effectType,
                 quantity = 1
-            };
-            allItems.Add(newItem);
-        }
+            });
         Refresh();
     }
 }

@@ -95,77 +95,55 @@ public class StoreItemSlotController : MonoBehaviour
 
     private void OnClickPurchase()
     {
-        // 1) 재고 amount > 0인 “한정 상품”만 실제 재고를 빼고, 0이 되면 품절 처리
-        if (data.amount > 0)
+        /* ===== 0) 레퍼런스 확보 ===== */
+        if (inventoryUI == null)
+            inventoryUI = FindObjectOfType<InventoryUI>(true);           // 비활성도 탐색
+        if (characterInfoManager == null)
+            characterInfoManager = FindObjectOfType<CharacterInfoManager>(true);
+
+        if (inventoryUI == null)
         {
-            // 1-1) 구매 가능 여부(골드 확인)
-            bool paid = MoneyManager.Instance.SpendGold(data.price);
-            if (!paid)
-            {
-                Debug.Log("[Store] 잔액 부족: 구매 불가");
-                return;
-            }
+            Debug.LogError("[StoreSlot] InventoryUI를 찾지 못했습니다. 구매 중단");
+            return;
+        }
 
-            // 1-2) 재고 차감 후 UI 갱신
+        /* ===== 1) 결제(골드 차감) ===== */
+        if (!MoneyManager.Instance.SpendGold(data.price))
+        {
+            Debug.Log("[Store] 잔액 부족: 구매 불가");
+            return;
+        }
+
+        /* ===== 2) 재고 처리 ===== */
+        if (data.amount > 0)          // 한정 상품
+        {
             data.amount--;
-            Debug.Log($"[Store] '{data.itemName}' 남은 재고: {data.amount}");
-
             if (data.amount > 0)
             {
-                amountText.gameObject.SetActive(true);
-                amountText.text = "수량: " + data.amount;
+                amountText.text = $"수량: {data.amount}";
             }
-            else
+            else                       // 품절
             {
                 amountText.gameObject.SetActive(false);
-                DisableAsSoldOut(); // 재고 0이므로 품절 처리
+                DisableAsSoldOut();
             }
         }
-        else
-        {
-            // 2) amount == 0인 “무제한 상품”
-            bool paid = MoneyManager.Instance.SpendGold(data.price);
-            if (!paid)
-            {
-                Debug.Log("[Store] 잔액 부족: 구매 불가");
-                return;
-            }
-            // (무제한 상품이므로 재고 감소/품절 처리 없음)
-        }
-        // 씬에서 참조로 연결한 경우라면:
-        if (characterInfoManager != null)
-        {
-            characterInfoManager.AddStoreCost(data.price);
-            Debug.Log($"[SotreItemSlot] AddStoreCost 호출됨: {data.price}원");
-        }
-        else 
-        {
-            Debug.LogWarning("[StoreitemSlot] characterInfoManager가 할당되지 않음");
-        }
+        /* amount == 0 → 무제한 상품은 재고 감소 없음 */
 
-        // 3) 인벤토리 카테고리 매핑
-        ItemCategory inventoryCat;
-        if (data.itemCategory == StoreItemCategory.Material)
-        {
-            inventoryCat = ItemCategory.Weapon;
-        }
-        else if (data.itemCategory == StoreItemCategory.Enhance)
-        {
+        /* ===== 3) 통계 반영 ===== */
+        characterInfoManager?.AddStoreCost(data.price);
+
+        /* ===== 4) 인벤토리 카테고리 결정 ===== */
+        ItemCategory inventoryCat = ItemCategory.Weapon;    // 기본값(Material)
+        if (data.itemCategory == StoreItemCategory.Enhance)
             inventoryCat = ItemCategory.Enhancement;
-        }
-        else // TodaySpecial
-        {
+        else if (data.itemCategory == StoreItemCategory.TodaySpecial)
             inventoryCat = (data.baseCategory == StoreItemCategory.Material)
-                ? ItemCategory.Weapon
-                : ItemCategory.Enhancement;
-        }
+                           ? ItemCategory.Weapon
+                           : ItemCategory.Enhancement;
 
-        // 4) 인벤토리에 추가
-        inventoryUI.AddOrIncreaseItem(
-            data.icon,
-            inventoryCat,
-            data.effectType
-        );
+        /* ===== 5) 인벤토리에 추가 ===== */
+        inventoryUI.AddOrIncreaseItem(data.icon, inventoryCat, data.effectType);
     }
 
     private void DisableAsSoldOut()

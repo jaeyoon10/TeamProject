@@ -843,6 +843,11 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   sequenceLength: 5
   displayDuration: 1
+  resultIndicators:
+  - {fileID: 1768019269}
+  - {fileID: 2136427385}
+  successColor: {r: 0.5, g: 0.9, b: 1, a: 1}
+  failColor: {r: 1, g: 0, b: 0, a: 1}
   slotContainer: {fileID: 958419925}
   slotPrefab: {fileID: 6895758926196391675, guid: 002159afb7d8bbe4fa6e3b75d3b4cb5a, type: 3}
   resultText: {fileID: 1491531748}

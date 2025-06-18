@@ -16,12 +16,9 @@ MonoBehaviour:
   icon: {fileID: 712035800519618848, guid: 5555116c8467a454c8c90c5cece8dc84, type: 3}
   requiredLevel: 1
   ingredients:
-  - name: "\uB179\uC0C9 \uBCF4\uC11D"
-    icon: {fileID: 4510759682156403089, guid: aa690ae72e998f54b8c8b099d2165bab, type: 3}
-    amount: 5
   - name: "\uD30C\uB780 \uBCF4\uC11D"
     icon: {fileID: -4007279082606720751, guid: b0f85d5a744f799449233745652b567a, type: 3}
     amount: 1
   - name: "\uBCF4\uB77C \uBCF4\uC11D"
     icon: {fileID: -6658015361760761495, guid: 7ae2be9a267597a4596c1cdebed8f84d, type: 3}
-    amount: 3
+    amount: 1
