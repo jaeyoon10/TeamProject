@@ -40,6 +40,8 @@ public class CustomerController : MonoBehaviour
 
     IEnumerator WalkToDoor()
     {
+        transform.LookAt(targetDoor.position);
+
         while (Vector3.Distance(transform.position, targetDoor.position) > 0.1f)
         {
             transform.position = Vector3.MoveTowards(
@@ -123,6 +125,8 @@ public class CustomerController : MonoBehaviour
         // 잠시 대기
         yield return new WaitForSeconds(1f);
 
+        transform.LookAt(exitPoint.position);
+
         // 퇴장 애니 + 이동
         animator.SetBool("isMoving", true);
         while (Vector3.Distance(transform.position, exitPoint.position) > 0.1f)
@@ -134,8 +138,8 @@ public class CustomerController : MonoBehaviour
             );
             yield return null;
         }
-        WeaponCraftingManager.Instance.customerSpawner.SpawnCustomer();
 
+        WeaponCraftingManager.Instance.customerSpawner.SpawnCustomer();
         Destroy(gameObject);
     }
 }

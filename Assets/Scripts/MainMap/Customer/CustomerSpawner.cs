@@ -26,17 +26,22 @@ public class CustomerSpawner : MonoBehaviour
 
         // ExitPoint도 씬에서 찾아서
         var doorgo = GameObject.Find("CustomerDoorObject");
-        if (go != null) targetDoor = doorgo.transform;
+        if (doorgo != null) targetDoor = doorgo.transform;
         else Debug.LogError("CustomerDoorObject 씬에 없습니다!");
     }
 
     public void SpawnCustomer()
     {
-        // 로직 생략…
+        
 
         var go = Instantiate(customerPrefab, spawnPoint.position, spawnPoint.rotation);
         var ctrl = go.GetComponent<CustomerController>();
-        if (ctrl == null) return;
+        if (ctrl == null) 
+        {
+            Debug.LogError("CustomerPrefab에 CustomerController가 없습니다.");
+            return;
+        }
+
 
         // **CustomerController에 방금 찾은 targetDoor/exitPoint 넘겨주기**
         ctrl.targetDoor = targetDoor;
