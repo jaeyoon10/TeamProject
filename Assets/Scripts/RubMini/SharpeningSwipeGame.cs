@@ -2,12 +2,23 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 
 public class SharpeningSwipeGame : MonoBehaviour
 {
     [Header("Game Settings")]
-    public int sequenceLength = 4;               // 표시할 키 개수 (레시피 난이도에 따라 동적 변경)
+    public int sequenceLength = 4;               // 표시할 키 개수 
     public float displayDuration = 1.0f;         // 키 표시 시간 (초)
+
+    [Header("시도 결과 표시 (O 표시들)")]
+    public Image[] resultIndicators; // 2개 연결
+    public Color successColor = new Color(0.5f, 0.9f, 1f); // 하늘색
+    public Color failColor = Color.red;
+
+    private int totalAttempts = 0;
+    private int totalSuccesses = 0;
+
 
     [Header("UI Components")]
     public Transform slotContainer;              // HorizontalLayoutGroup이 붙은 컨테이너
@@ -15,14 +26,29 @@ public class SharpeningSwipeGame : MonoBehaviour
     public TextMeshProUGUI resultText;           // 성공/실패 메시지
     public TextMeshProUGUI inputPromptText;      // "입력하세요" 안내 텍스트
 
-    private List<KeyCode> sequence;              // A/D 키 시퀀스 저장
+    private List<KeyCode> sequence;              
     private int inputIndex;                      // 현재 입력 인덱스
     private bool inputEnabled;                   // 입력 가능 여부
+
+    /* === 품질 계산용 공개 카운터 추가 === */
+    public int failCount { get; private set; }   
+
+    public System.Action onMiniGameSuccess; // 추가
 
     void Start()
     {
         inputPromptText.gameObject.SetActive(false);
         StartGame();
+        ResetResults();
+    }
+
+    void ResetResults()
+    {
+        totalAttempts = 0;
+        totalSuccesses = 0;
+        failCount = 0;                      
+        foreach (var img in resultIndicators)
+            img.color = Color.gray;
     }
 
     void StartGame()
@@ -50,7 +76,6 @@ public class SharpeningSwipeGame : MonoBehaviour
         foreach (Transform child in slotContainer)
             Destroy(child.gameObject);
 
-        // 슬롯 프리팹 인스턴스화 및 텍스트 설정
         foreach (KeyCode key in sequence)
         {
             GameObject go = Instantiate(slotPrefab, slotContainer);
@@ -84,27 +109,61 @@ public class SharpeningSwipeGame : MonoBehaviour
         if (Input.GetKeyDown(KeyCode.A) || Input.GetKeyDown(KeyCode.D))
         {
             KeyCode pressed = Input.GetKeyDown(KeyCode.A) ? KeyCode.A : KeyCode.D;
-            Debug.Log($"[SharpeningGame] KeyDown detected: {pressed}. current inputIndex: {inputIndex}");
 
             if (pressed == sequence[inputIndex])
             {
                 inputIndex++;
-                if (inputIndex == 4)
+
+                if (inputIndex == 1)
                     inputPromptText.gameObject.SetActive(false);
 
                 if (inputIndex >= sequenceLength)
                 {
                     resultText.text = "성공!";
-                    inputEnabled = false;
-                    Invoke(nameof(StartGame), 2f);
+                    EndGame(true);
                 }
             }
             else
             {
                 resultText.text = "실패!";
-                inputEnabled = false;
-                Invoke(nameof(StartGame), 2f);
+                failCount++;
+                EndGame(false);
             }
         }
     }
+    void EndGame(bool isSuccess)
+    {
+        inputEnabled = false;
+
+        // 시도 결과 색상 표시
+        if (totalAttempts < resultIndicators.Length)
+        {
+            resultIndicators[totalAttempts].color = isSuccess ? successColor : failColor;
+        }
+
+        totalAttempts++;
+        if (isSuccess) totalSuccesses++;
+
+        // 2번 다 했으면 판정
+        if (totalAttempts >= 2)
+        {
+            failCount = 2 - totalSuccesses;
+            onMiniGameSuccess?.Invoke();
+            // 씬 언로드 딜레이 코루틴 호출
+            StartCoroutine(DelayedUnload());
+        }
+        else
+        {
+            Invoke(nameof(StartGame), 1.5f); // 다음 시도
+        }
+    }
+    private IEnumerator DelayedUnload()
+    {
+        // 결과가 보일 시간을 줍니다.
+        yield return new WaitForSeconds(1f);
+
+        // 씬 이름에 맞춰 언로드
+        SceneManager.UnloadSceneAsync("MiniGameRub");
+    }
+
 }

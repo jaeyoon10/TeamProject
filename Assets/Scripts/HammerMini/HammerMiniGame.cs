@@ -1,76 +1,119 @@
-using System.Collections;
+ï»¿using System.Collections;
 using System.Collections.Generic;
+using System.Linq;
+using System.Reflection;
 using TMPro;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 using UnityEngine.UI;
 
 public class HammerMiniGame : MonoBehaviour
 {
+    /* ---------- ì¸ìŠ¤í™í„° ---------- */
     [Header("UI References")]
     public RectTransform pointerRoot;
     public RectTransform pointer;
-    public RectTransform zoneContainer;       // QTEContainer
+    public RectTransform zoneContainer;
     public TextMeshProUGUI feedbackText;
 
     [Header("Prefabs & Settings")]
-    public UIArc arcPrefab;                   // UIArc ÇÁ¸®ÆÕ ÂüÁ¶
-    public int minZones = 1, maxZones = 1;    // ¾ÆÅ© °³¼ö (Áö±İÀº 1)
+    public UIArc arcPrefab;
+    public int minZones = 1, maxZones = 1;
     public float rotationSpeed = 180f;
 
-    [Header("Success UI")]
-    [Tooltip("À§¿¡ ¹èÄ¡ÇÑ 3°³ÀÇ ¿ø ÀÌ¹ÌÁöµé")]
-    public Image[] successIndicators;  // ÀÎ½ºÆåÅÍ¿¡¼­ Å©±â¸¦ 3À¸·Î
+    [Header("Success UI (3ê°œ ì›)")]
+    public Image[] successIndicators;
     public Color offColor = Color.gray;
-    public Color perfectColor = Color.blue;
+    public Color perfectColor = new Color(0.3f, 0.9f, 1f);
     public Color greatColor = Color.green;
     public Color goodColor = Color.yellow;
     public Color missColor = Color.red;
 
     [Header("Game Settings")]
-    public int requiredSuccesses = 3;  // Åë°ú¿¡ ÇÊ¿äÇÑ ¼º°ø È½¼ö
-
-    [Tooltip("ÆÇÁ¤ ±¸°£ Å©±â (°¢µµ)")]
+    public int requiredSuccesses = 3;
     public float perfectZoneSize = 10f;
     public float greatZoneSize = 30f;
     public float goodZoneSize = 60f;
-
-    [Tooltip("È÷Æ®Á¸ ¾ÆÅ© ÀüÃ¼ Å©±â(µµ)")]
     public float hitArcSize = 60f;
 
+    /* ---------- í’ˆì§ˆ ê³„ì‚° ê³µê°œ ì¹´ìš´í„° ---------- */
+    public int perfectCount { get; private set; }   // í¼í™íŠ¸ íšŸìˆ˜
+    public int failCount { get; private set; }   // Miss íšŸìˆ˜
+    public System.Action onMiniGameSuccess;         // ì„±ê³µ ì½œë°±
+
+    /* ---------- ë‚´ë¶€ ---------- */
+    private readonly List<UIArc> arcs = new();
+    private readonly List<float> zoneAngles = new();
     private float currentAngle;
-    private List<UIArc> arcs = new List<UIArc>();
-    private List<float> zoneAngles = new List<float>();
     private bool isChecking;
+    private int successCount;   // GoodÂ·GreatÂ·Perfect ëˆ„ì 
+    private int attemptCount;   // ì´ ì‹œë„(=Space) íšŸìˆ˜
 
-    //¼º°ø ´©ÀûÄ¡
-    private int successCount = 0;
-    //½Ãµµ È½¼ö
-    private int attemptCount = 0;
-
+    /* ---------- ì´ˆê¸°í™” ---------- */
     void Start()
     {
         feedbackText.alpha = 0f;
+        foreach (var img in successIndicators) img.color = offColor;
         SetupPointer();
-
-        // ¼º°ø ÀÎµğÄÉÀÌÅÍ ÃÊ±âÈ­
-        for (int i = 0; i < successIndicators.Length; i++)
-            successIndicators[i].color = offColor;
-
         SpawnZones();
     }
 
+    /* ---------- ë§¤ í”„ë ˆì„ ---------- */
     void Update()
     {
-        // Æ÷ÀÎÅÍ È¸Àü
         currentAngle = (currentAngle + rotationSpeed * Time.deltaTime) % 360f;
         pointerRoot.localEulerAngles = new Vector3(0, 0, -currentAngle);
 
         if (!isChecking && Input.GetKeyDown(KeyCode.Space))
-            StartCoroutine(CheckTimingAndFeedback());
+            StartCoroutine(CheckTiming());
 
-        pointerRoot.SetAsLastSibling();
+        pointerRoot.SetAsLastSibling();   // í•­ìƒ ë§¨ ìœ„ ë Œë”
     }
 
+    /* ---------- í•µì‹¬ íŒì • ---------- */
+    IEnumerator CheckTiming()
+    {
+        isChecking = true;
+
+        /* 1) ê°€ì¥ ê°€ê¹Œìš´ ì¡´ ì°¾ê¸° */
+        float pointerAng = currentAngle;
+        float bestDiff = 180f;
+        for (int i = 0; i < zoneAngles.Count; i++)
+            bestDiff = Mathf.Min(bestDiff,
+                       Mathf.Abs(Mathf.DeltaAngle(pointerAng, zoneAngles[i])));
+
+        /* 2) ê²°ê³¼ ê²°ì • */
+        string res; Color col;
+        if (bestDiff <= perfectZoneSize * 0.5f) { res = "Perfect"; col = perfectColor; perfectCount++; }
+        else if (bestDiff <= greatZoneSize * 0.5f) { res = "Great"; col = greatColor; }
+        else if (bestDiff <= goodZoneSize * 0.5f) { res = "Good"; col = goodColor; }
+        else { res = "Miss"; col = missColor; failCount++; }
+
+        /* 3) UI í‘œì‹œ */
+        feedbackText.text = res;
+        feedbackText.color = col; feedbackText.alpha = 1f;
+        if (attemptCount < successIndicators.Length)
+            successIndicators[attemptCount].color = col;
+
+        /* 4) ëˆ„ì  ì¹´ìš´íŠ¸ */
+        if (res != "Miss") successCount++;
+        attemptCount++;
+
+        /* 5) ì¢…ë£Œ ì¡°ê±´ */
+        if (successCount >= requiredSuccesses || attemptCount >= successIndicators.Length)
+        {
+            OnGameSuccess();                             // ì½œë°± + ë”œë ˆì´ ì–¸ë¡œë“œ
+            yield break;
+        }
+
+        /* 6) ë‹¤ìŒ íŒ ëŒ€ë¹„ */
+        yield return new WaitForSeconds(0.6f);
+        feedbackText.alpha = 0f;
+        isChecking = false;
+        SpawnZones();
+    }
+
+    /* ---------- ë³´ì¡° ë©”ì„œë“œë“¤ (ê¸°ì¡´ ë¡œì§ê³¼ ë™ì¼) ---------- */
     void SetupPointer()
     {
         float outerR = zoneContainer.rect.height * 0.5f;
@@ -87,10 +130,9 @@ public class HammerMiniGame : MonoBehaviour
             new Vector2(0.5f, 0.5f);
         pointer.anchoredPosition = new Vector2(0, orbitR);
     }
-
     void SpawnZones()
     {
-        // ±âÁ¸ »èÁ¦
+        // ê¸°ì¡´ ì‚­ì œ
         foreach (var a in arcs) if (a) Destroy(a.gameObject);
         arcs.Clear();
         zoneAngles.Clear();
@@ -98,7 +140,7 @@ public class HammerMiniGame : MonoBehaviour
         int count = Random.Range(minZones, maxZones + 1);
         for (int i = 0; i < count; i++)
         {
-            // 1) UIArc ÀÎ½ºÅÏ½º »ı¼º
+            // 1) UIArc ì¸ìŠ¤í„´ìŠ¤ ìƒì„±
 
             var a = Instantiate(arcPrefab, zoneContainer);
             var rt = a.GetComponent<RectTransform>();
@@ -107,11 +149,11 @@ public class HammerMiniGame : MonoBehaviour
             rt.offsetMin = rt.offsetMax = Vector2.zero;
 
 
-            // 2) ·£´ı Áß½É °¢µµ
+            // 2) ëœë¤ ì¤‘ì‹¬ ê°ë„
             float center = Random.Range(0f, 360f);
             zoneAngles.Add(center);
 
-            // 3) Perfect / Great / Good / Miss 4´Ü°è Ç¥½Ã
+            // 3) Perfect / Great / Good / Miss 4ë‹¨ê³„ í‘œì‹œ
             //    Perfect
             a.startAngle = center - hitArcSize * 0.5f;
             a.endAngle = center + hitArcSize * 0.5f;
@@ -122,87 +164,21 @@ public class HammerMiniGame : MonoBehaviour
             arcs.Add(a);
         }
     }
-
-    IEnumerator CheckTimingAndFeedback()
-    {
-        isChecking = true;
-
-        // Æ÷ÀÎÅÍ °¢µµ (currentAngle°ú µ¿ÀÏ)
-        float pointerAng = currentAngle;
-
-        // °¡Àå °¡±î¿î Á¸ Ã£±â
-        float best = 180f;
-        int idx = 0;
-        for (int i = 0; i < zoneAngles.Count; i++)
-        {
-            float diff = Mathf.Abs(Mathf.DeltaAngle(pointerAng, zoneAngles[i]));
-            if (diff < best)
-            {
-                best = diff; idx = i;
-            }
-        }
-
-        float rel = best;
-        string res; Color col;
-        if (rel <= perfectZoneSize * 0.5f) { res = "Perfect"; col = Color.cyan; }
-        else if (rel <= greatZoneSize * 0.5f) { res = "Great"; col = Color.green; }
-        else if (rel <= goodZoneSize * 0.5f) { res = "Good"; col = Color.yellow; }
-        else { res = "Miss"; col = Color.red; }
-
-        feedbackText.text = res;
-        feedbackText.color = col;
-        feedbackText.alpha = 1f;
-
-        Debug.Log($"[DEBUG] Pointer:{pointerAng:F1}¡Æ HitZone:{zoneAngles[idx]:F1}¡Æ ¥Ä{rel:F1}¡Æ¡æ{res}");
-
-        if (attemptCount < successIndicators.Length)
-            successIndicators[attemptCount].color = col;
-
-        // 2) ¼º°ø Ä«¿îÆ® Á¶Á¤
-        if (res != "Miss")
-            successCount++;
-        else
-            successCount = Mathf.Max(0, successCount - 1);
-
-        attemptCount++;
-
-        // 3) Á¶°Ç Ã¼Å©
-        if (successCount >= requiredSuccesses)
-        {
-            OnGameSuccess();    // 3¹ø ¼º°øÀ¸·Î Å¬¸®¾î
-            yield break;
-        }
-        if (attemptCount >= successIndicators.Length)
-        {
-            OnGameFail();       // 3¹ø ´Ù ½á¹ö¸®¸é ½ÇÆĞ Ã³¸®
-            yield break;
-        }
-
-        // Âª°Ô ´ë±â ÈÄ ÆäÀÌµå ¾Æ¿ô
-        yield return new WaitForSeconds(0.6f);
-        float t = 0f, fadeDur = 0.3f;
-        while (t < fadeDur)
-        {
-            t += Time.deltaTime;
-            feedbackText.alpha = Mathf.Lerp(1f, 0f, t / fadeDur);
-            yield return null;
-        }
-
-        isChecking = false;
-        SpawnZones();
-    }
-
-
     void OnGameSuccess()
     {
-        //Åë°ú Ã³¸®
-        Debug.Log(" MiniGame Cleared!");
-        
+        perfectCount = successIndicators.Count(img => img.color == perfectColor);
+        failCount = successIndicators.Count(img => img.color == missColor);
+
+        onMiniGameSuccess?.Invoke();
+        // ë°”ë¡œ ì–¸ë¡œë“œí•˜ì§€ ì•Šê³  ì ê¹ ëŒ€ê¸°
+        StartCoroutine(DelayedFinish());
     }
 
-    void OnGameFail()
+    private IEnumerator DelayedFinish()
     {
-        //½ÇÆĞ Ã³¸®
-        Debug.Log("MiniGame Failed!");
+        yield return new WaitForSeconds(1f);
+        SceneManager.UnloadSceneAsync("MinigameHammerHit");
     }
 }
+
+

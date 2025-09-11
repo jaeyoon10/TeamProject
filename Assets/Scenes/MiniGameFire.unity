@@ -306,8 +306,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   moveArea: {fileID: 1738921710}
-  minSpeed: 450
-  maxSpeed: 650
+  minSpeed: 250
+  maxSpeed: 500
   changeInterval: 1.3
 --- !u!1 &229271404
 GameObject:
@@ -344,7 +344,7 @@ Camera:
   m_GameObject: {fileID: 229271404}
   m_Enabled: 1
   serializedVersion: 2
-  m_ClearFlags: 2
+  m_ClearFlags: 1
   m_BackGroundColor: {r: 0, g: 0, b: 0, a: 0}
   m_projectionMatrixMode: 1
   m_GateFitMode: 2
@@ -695,7 +695,7 @@ MonoBehaviour:
   progressSlider: {fileID: 1345946504}
   perfectText: {fileID: 254719027}
   fillSpeed: 0.4
-  drainSpeed: 0.5
+  drainSpeed: 0.2
 --- !u!1 &755886632
 GameObject:
   m_ObjectHideFlags: 0
@@ -842,7 +842,7 @@ MonoBehaviour:
     m_SelectedTrigger: Selected
     m_DisabledTrigger: Disabled
   m_Interactable: 1
-  m_TargetGraphic: {fileID: 0}
+  m_TargetGraphic: {fileID: 1891519567}
   m_FillRect: {fileID: 1562442080}
   m_HandleRect: {fileID: 0}
   m_Direction: 0
