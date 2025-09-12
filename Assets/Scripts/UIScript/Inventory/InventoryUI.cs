@@ -58,6 +58,8 @@ public class InventoryUI : MonoBehaviour
     {
         // 인벤토리 패널을 열 때마다 **카테고리 필터만** 초기화
         filterActive = false;
+        currentCategory = ItemCategory.Weapon;
+        
         Refresh();
     }
 

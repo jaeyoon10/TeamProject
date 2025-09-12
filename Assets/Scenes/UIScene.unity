@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657826, g: 0.49641263, b: 0.57481676, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -15986,8 +15986,8 @@ GameObject:
   m_Component:
   - component: {fileID: 1541266378}
   - component: {fileID: 1541266377}
-  - component: {fileID: 1541266379}
   - component: {fileID: 1541266381}
+  - component: {fileID: 1541266382}
   m_Layer: 5
   m_Name: UIManager
   m_TagString: Untagged
@@ -16037,26 +16037,6 @@ RectTransform:
   m_AnchoredPosition: {x: 0, y: 0}
   m_SizeDelta: {x: 100, y: 100}
   m_Pivot: {x: 0.5, y: 0.5}
---- !u!114 &1541266379
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1541266376}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 0dc09e4ae0f0def4bbd91198807ff337, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  itemSlotPrefab: {fileID: 3846717627286560834, guid: 306451856c49bf542ae1b106362f8ef9, type: 3}
-  content: {fileID: 1927631676}
-  filterWeaponButton: {fileID: 2035572224}
-  filterEnhancementButton: {fileID: 1827985993}
-  filterGeneralButton: {fileID: 470652687}
-  filterQuestButton: {fileID: 897647973}
-  sortButton: {fileID: 1448148162}
-  orderButton: {fileID: 792904452}
 --- !u!225 &1541266381
 CanvasGroup:
   m_ObjectHideFlags: 0
@@ -16069,6 +16049,21 @@ CanvasGroup:
   m_Interactable: 1
   m_BlocksRaycasts: 1
   m_IgnoreParentGroups: 0
+--- !u!114 &1541266382
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1541266376}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0c4747f37a4b08547a56e29c63d40d20, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  InventoryOpenButton: {fileID: 373443362}
+  InventoryPanel: {fileID: 1657499806}
+  InventoryCloseButton: {fileID: 1472043673}
 --- !u!1 &1576743065
 GameObject:
   m_ObjectHideFlags: 0
@@ -16687,6 +16682,7 @@ GameObject:
   - component: {fileID: 1657499807}
   - component: {fileID: 1657499809}
   - component: {fileID: 1657499808}
+  - component: {fileID: 1657499810}
   m_Layer: 5
   m_Name: InventoryPanelBg
   m_TagString: Untagged
@@ -16752,6 +16748,26 @@ CanvasRenderer:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1657499806}
   m_CullTransparentMesh: 1
+--- !u!114 &1657499810
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 1657499806}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 0dc09e4ae0f0def4bbd91198807ff337, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  itemSlotPrefab: {fileID: 3846717627286560834, guid: 306451856c49bf542ae1b106362f8ef9, type: 3}
+  content: {fileID: 1927631676}
+  filterWeaponButton: {fileID: 2035572224}
+  filterEnhancementButton: {fileID: 1827985993}
+  filterGeneralButton: {fileID: 470652687}
+  filterQuestButton: {fileID: 897647973}
+  sortButton: {fileID: 1448148162}
+  orderButton: {fileID: 792904452}
 --- !u!1 &1665021437
 GameObject:
   m_ObjectHideFlags: 0
