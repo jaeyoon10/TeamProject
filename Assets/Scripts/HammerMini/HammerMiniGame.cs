@@ -39,7 +39,7 @@ public class HammerMiniGame : MonoBehaviour
     /* ---------- 품질 계산 공개 카운터 ---------- */
     public int perfectCount { get; private set; }   // 퍼펙트 횟수
     public int failCount { get; private set; }   // Miss 횟수
-    public System.Action onMiniGameSuccess;         // 성공 콜백
+    public System.Action<int, int> onGameFinished;         // 성공 콜백
 
     /* ---------- 내부 ---------- */
     private readonly List<UIArc> arcs = new();
@@ -169,7 +169,7 @@ public class HammerMiniGame : MonoBehaviour
         perfectCount = successIndicators.Count(img => img.color == perfectColor);
         failCount = successIndicators.Count(img => img.color == missColor);
 
-        onMiniGameSuccess?.Invoke();
+        onGameFinished?.Invoke(failCount, perfectCount);
         // 바로 언로드하지 않고 잠깐 대기
         StartCoroutine(DelayedFinish());
     }
@@ -177,6 +177,7 @@ public class HammerMiniGame : MonoBehaviour
     private IEnumerator DelayedFinish()
     {
         yield return new WaitForSeconds(1f);
+        Debug.Log(" Unloading Hammer scene now!");
         SceneManager.UnloadSceneAsync("MinigameHammerHit");
     }
 }

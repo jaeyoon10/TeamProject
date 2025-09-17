@@ -15,9 +15,13 @@ public class SliderController : MonoBehaviour
     public float drainSpeed = 0.3f;
 
     private bool isGameEnded = false;
+    private float startTime;
+    public System.Action<int> onGameFinished;
 
-    public System.Action onMiniGameSuccess;
-
+    private void Start()
+    {
+        startTime = Time.time;
+    }
     void Update()
     {
         if (isGameEnded) return;
@@ -58,7 +62,12 @@ public class SliderController : MonoBehaviour
 
         ShowPerfect();
 
-        onMiniGameSuccess?.Invoke();
+        float elapsed = Time.time - startTime;
+        int penalty = 0;
+        if (elapsed >= 11f) penalty = 25;
+        else if (elapsed >= 8f) penalty = 15;
+        else if (elapsed >= 5f) penalty = 10;
+        onGameFinished?.Invoke(penalty);
 
         // 언로드 전에 딜레이를 주도록 코루틴 실행
         StartCoroutine(DelayedUnload());

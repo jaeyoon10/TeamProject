@@ -154,20 +154,16 @@ public class WeaponCraftingManager : MonoBehaviour
         yield return StartCoroutine(MoveTo(heatPosition.position));
         PlayWorkAnim();
 
-        bool done = false;
-        float t0 = Time.time;
-
         yield return StartCoroutine(LoadMiniGameScene(
             "MiniGameFire",
-            slider => slider.onMiniGameSuccess += () => done = true
+            slider =>
+            {
+                slider.onGameFinished = (penalty) =>
+                {
+                    qualityScore -= penalty;
+                };
+            }
         ));
-
-        // 성공 콜백이 불린 후 품질 감점
-        yield return new WaitUntil(() => done);
-        float elapsed = Time.time - t0;
-        if (elapsed >= 11f) qualityScore -= 25;
-        else if (elapsed >= 8f) qualityScore -= 15;
-        else if (elapsed >= 5f) qualityScore -= 10;
     }
 
     // 2) 해머 스텝
@@ -177,29 +173,21 @@ public class WeaponCraftingManager : MonoBehaviour
         yield return StartCoroutine(MoveTo(hammerPosition.position));
         PlayWorkAnim();
 
-        // 2) 미니게임 씬 로드 (콜백은 null)
-        yield return StartCoroutine(LoadMiniGameScene("MinigameHammerHIt", null));
+        yield return StartCoroutine(LoadMiniGameScene(
+            "MinigameHammerHit",
+            null,
+            hammer =>
+            {
+                hammer.onGameFinished = (fails, perfect) =>
+                {
+                    if (fails == 1) qualityScore -= 10;
+                    else if (fails == 2) qualityScore -= 20;
+                    else if (fails >= 3) qualityScore -= 35;
 
-        // 3) 씬이 언로드된 뒤 FindObjectOfType 로 직접 꺼내오기
-        var mini = FindObjectOfType<HammerMiniGame>(true);
-        if (mini == null)
-        {
-            Debug.LogError("[Crafting] HammerMiniGame 을 씬에서 찾지 못했습니다!");
-        }
-        else
-        {
-            Debug.Log($"[Crafting] Hammer failCount={mini.failCount}, perfectCount={mini.perfectCount}");
-        }
-
-        // 4) 품질 계산
-        int fails = mini ? mini.failCount : 0;
-        int perfect = mini ? mini.perfectCount : 0;
-
-        if (fails == 1) qualityScore -= 7;
-        else if (fails == 2) qualityScore -= 16;
-        else if (fails >= 3) qualityScore -= 30;
-
-        qualityScore += perfect * 5;
+                    qualityScore += perfect * 5;
+                };
+            }
+        ));
     }
 
     // 3) 연마 스텝
@@ -208,20 +196,18 @@ public class WeaponCraftingManager : MonoBehaviour
         yield return StartCoroutine(MoveTo(polishPosition.position));
         PlayWorkAnim();
 
-        yield return StartCoroutine(LoadMiniGameScene("MiniGameRub", null));
-
-        var mini = FindObjectOfType<SharpeningSwipeGame>(true);
-        if (mini == null)
-        {
-            Debug.LogError("[Crafting] SharpeningSwipeGame 을 씬에서 찾지 못했습니다!");
-        }
-        else
-        {
-            Debug.Log($"[Crafting] Sharpening failCount={mini.failCount}");
-        }
-
-        int fails = mini ? mini.failCount : 0;
-        qualityScore -= fails * 20;
+        yield return StartCoroutine(LoadMiniGameScene(
+           "MiniGameRub",
+           null,
+           null,
+           polish =>
+           {
+               polish.onGameFinished = (fails) =>
+               {
+                   qualityScore -= fails * 20;
+               };
+           }
+       ));
     }
 
     /* ==================================================
@@ -261,59 +247,46 @@ public class WeaponCraftingManager : MonoBehaviour
         var miniScene = SceneManager.GetSceneByName(sceneName);
         var roots = miniScene.GetRootGameObjects();
 
-        SliderController sliderCtrl = null;
-        HammerMiniGame hammerCtrl = null;
-        SharpeningSwipeGame polishCtrl = null;
-
         foreach (var root in roots)
         {
-            // 혹시 중복 EventSystem이 있으면 제거
-            var ev = root.GetComponent<EventSystem>();
-            if (ev) Destroy(ev.gameObject);
+            if (onSliderLoaded != null)
+            {
+                var slider = root.GetComponentInChildren<SliderController>(true);
+                if (slider != null) onSliderLoaded(slider);
+            }
 
-            if (sliderCtrl == null)
-                sliderCtrl = root.GetComponentInChildren<SliderController>(true);
-            if (hammerCtrl == null)
-                hammerCtrl = root.GetComponentInChildren<HammerMiniGame>(true);
-            if (polishCtrl == null)
-                polishCtrl = root.GetComponentInChildren<SharpeningSwipeGame>(true);
+            if (onHammerLoaded != null)
+            {
+                var hammer = root.GetComponentInChildren<HammerMiniGame>(true);
+                if (hammer != null) onHammerLoaded(hammer);
+            }
+
+            if (onPolishLoaded != null)
+            {
+                var polish = root.GetComponentInChildren<SharpeningSwipeGame>(true);
+                if (polish != null) onPolishLoaded(polish);
+            }
         }
 
-        if (sliderCtrl == null && onSliderLoaded != null)
-            Debug.LogError($"[Crafting] {sceneName} 씬에서 SliderController를 찾지 못함!");
-        if (hammerCtrl == null && onHammerLoaded != null)
-            Debug.LogError($"[Crafting] {sceneName} 씬에서 HammerMiniGame을 찾지 못함!");
-        if (polishCtrl == null && onPolishLoaded != null)
-            Debug.LogError($"[Crafting] {sceneName} 씬에서 SharpeningSwipeGame을 찾지 못함!");
-
-        // 3. 타입별 콜백 연결
-        if (sliderCtrl != null && onSliderLoaded != null) { onSliderLoaded(sliderCtrl); }
-        if (hammerCtrl != null && onHammerLoaded != null) { onHammerLoaded(hammerCtrl); }
-        if (polishCtrl != null && onPolishLoaded != null) { onPolishLoaded(polishCtrl); }
-
-        // 4. 내부 스크립트가 씬을 언로드할 때까지 대기
         yield return new WaitUntil(() => !SceneManager.GetSceneByName(sceneName).isLoaded);
     }
+
     private IEnumerator OnCraftingComplete(RecipeData recipe, int quality, int star)
     {
         bool popupClosed = false;
-        completePopup.Show(
-            recipe,
-            quality,
-            star,
-            () => popupClosed = true
-        );
+        completePopup.Show(recipe, quality, star, () => popupClosed = true);
         yield return new WaitUntil(() => popupClosed);
 
-        StartCoroutine(MoveTo(doorPosition.position));
+        yield return StartCoroutine(MoveTo(doorPosition.position));
 
-        // 2) 지금 문 앞에 대기 중인 손님에게 무기 전달
+        yield return new WaitForSeconds(1f);
+
         if (_currentCustomer != null)
-                {
+        {
             _currentCustomer.ServeWeapon(quality);
-                }
+        }
     }
-    //----------------------------------------------------------------
+
     private int CalcStar(int score)
     {
         if (score >= 80) return 5;
@@ -322,6 +295,5 @@ public class WeaponCraftingManager : MonoBehaviour
         if (score >= 10) return 2;
         return 1;
     }
-
 }
 

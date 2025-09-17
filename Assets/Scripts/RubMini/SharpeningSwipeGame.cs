@@ -16,16 +16,14 @@ public class SharpeningSwipeGame : MonoBehaviour
     public Color successColor = new Color(0.5f, 0.9f, 1f); // 하늘색
     public Color failColor = Color.red;
 
-    private int totalAttempts = 0;
-    private int totalSuccesses = 0;
-
-
     [Header("UI Components")]
     public Transform slotContainer;              // HorizontalLayoutGroup이 붙은 컨테이너
     public GameObject slotPrefab;                // TextMeshProUGUI 컴포넌트가 있는 프리팹
     public TextMeshProUGUI resultText;           // 성공/실패 메시지
     public TextMeshProUGUI inputPromptText;      // "입력하세요" 안내 텍스트
 
+    private int totalAttempts;
+    private int totalSuccesse;
     private List<KeyCode> sequence;              
     private int inputIndex;                      // 현재 입력 인덱스
     private bool inputEnabled;                   // 입력 가능 여부
@@ -33,7 +31,7 @@ public class SharpeningSwipeGame : MonoBehaviour
     /* === 품질 계산용 공개 카운터 추가 === */
     public int failCount { get; private set; }   
 
-    public System.Action onMiniGameSuccess; // 추가
+    public System.Action<int> onGameFinished; // 추가
 
     void Start()
     {
@@ -45,7 +43,7 @@ public class SharpeningSwipeGame : MonoBehaviour
     void ResetResults()
     {
         totalAttempts = 0;
-        totalSuccesses = 0;
+        totalSuccesse = 0;
         failCount = 0;                      
         foreach (var img in resultIndicators)
             img.color = Color.gray;
@@ -56,6 +54,7 @@ public class SharpeningSwipeGame : MonoBehaviour
         resultText.text = "";
         inputPromptText.gameObject.SetActive(false);
         inputEnabled = false;
+
         GenerateSequence();
         ShowSequence();
     }
@@ -142,13 +141,13 @@ public class SharpeningSwipeGame : MonoBehaviour
         }
 
         totalAttempts++;
-        if (isSuccess) totalSuccesses++;
+        if (isSuccess) totalSuccesse++;
 
         // 2번 다 했으면 판정
         if (totalAttempts >= 2)
         {
-            failCount = 2 - totalSuccesses;
-            onMiniGameSuccess?.Invoke();
+            failCount = 2 - totalSuccesse;
+            onGameFinished?.Invoke(failCount);
             // 씬 언로드 딜레이 코루틴 호출
             StartCoroutine(DelayedUnload());
         }
