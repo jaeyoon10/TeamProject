@@ -170,6 +170,10 @@ public class StoreSlotLoader : MonoBehaviour
     {
         foreach (var t in templates)
         {
+            // 여기서 Inspector에 아이콘이 들어있는데도 null이면 콘솔에 찍힘
+            if (t.icon == null)
+                Debug.LogError($"템플릿 {t.itemName} 의 icon이 NULL 입니다!");
+
             int amt = randomizeAmount ? Random.Range(1, 6) : t.amount;
             target.Add(new StoreItemData
             {

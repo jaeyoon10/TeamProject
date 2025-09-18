@@ -14,6 +14,7 @@ public class ItemSlot : MonoBehaviour
     /// </summary>
     public void Init(InventoryItem item)
     {
+
         // 1) 아이콘 세팅
         icon.sprite = item.icon;
         icon.preserveAspect = true;

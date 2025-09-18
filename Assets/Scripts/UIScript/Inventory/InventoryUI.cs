@@ -34,7 +34,8 @@ public class InventoryUI : MonoBehaviour
 
     private void Awake()
     {
-        allItems = new List<InventoryItem>();
+        if (allItems == null)
+            allItems = new List<InventoryItem>();
     }
 
     private void Start()
@@ -157,6 +158,7 @@ public class InventoryUI : MonoBehaviour
 
     public void AddOrIncreaseItem(Sprite icon, ItemCategory category, EffectType effectType)
     {
+
         var existing = allItems.Find(x => x.icon == icon && x.category == category && x.effectType == effectType);
         if (existing != null)
             existing.quantity += 1;
