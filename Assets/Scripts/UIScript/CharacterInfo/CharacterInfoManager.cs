@@ -64,6 +64,9 @@ public class CharacterInfoManager : MonoBehaviour
     [Header("=== DaySummary 매니저 참조 ===")]
     public DaySummaryManager daySummaryManager;
 
+    [Header("레벨업 UI 연결")]
+    public LevelUpUI levelUpUI;
+
     #region ===== 공개 속성 =====
     public int CurrentDay => currentDay;
     public int CurrentLevel => currentLevel;
@@ -185,13 +188,16 @@ public class CharacterInfoManager : MonoBehaviour
         }
         xpBar.maxValue = xpPerLevel;
         xpBar.value = currentXP;
-    }
+    } 
 
     private void LevelUpRoutine()
     {
         currentLevel++;
         UpdateLevelText();
         StartCoroutine(PlayLevelUpEffect());
+
+        if (levelUpUI != null)
+            levelUpUI.ShowLevelUp(currentLevel);
     }
 
     private void UpdateLevelText()
@@ -285,4 +291,10 @@ public class CharacterInfoManager : MonoBehaviour
         dailyProfit제작 = dailyProfit의뢰 = dailyCost상점 = dailyCost강화 = 0;
     }
     #endregion
+
+    public void AddTestXP()
+    {
+        AddXP(50); // 원하는 값 넣으면 됨
+        Debug.Log("[CharacterInfoManager] 테스트용 XP 50 추가!");
+    }
 }
