@@ -6055,7 +6055,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 1}
   m_AnchorMax: {x: 0, y: 1}
-  m_AnchoredPosition: {x: 412.61, y: -156}
+  m_AnchoredPosition: {x: 412.61, y: -131}
   m_SizeDelta: {x: 200, y: 50}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &520215509
@@ -6105,13 +6105,13 @@ MonoBehaviour:
   m_faceColor:
     serializedVersion: 2
     rgba: 4294967295
-  m_fontSize: 36
-  m_fontSizeBase: 36
+  m_fontSize: 50
+  m_fontSizeBase: 50
   m_fontWeight: 400
   m_enableAutoSizing: 0
   m_fontSizeMin: 18
   m_fontSizeMax: 72
-  m_fontStyle: 0
+  m_fontStyle: 1
   m_HorizontalAlignment: 2
   m_VerticalAlignment: 512
   m_textAlignment: 65535
@@ -16751,6 +16751,9 @@ MonoBehaviour:
   slotPrefab: {fileID: 6852658463156572679, guid: 063e73cde422c104c883206225c9f62a, type: 3}
   allRecipes:
   - {fileID: 11400000, guid: 778fbcdc0e6dbd04c9007b76f5f55aa9, type: 2}
+  - {fileID: 11400000, guid: 0e9420b2d206e954eb44f76f53549122, type: 2}
+  - {fileID: 11400000, guid: b95d10cb3ccc2c642a592b5edbdad2b7, type: 2}
+  - {fileID: 11400000, guid: 723c16907480e2c4faca7d8d0e315f06, type: 2}
   detailPanel: {fileID: 1191728680}
   detailIcon: {fileID: 142955995}
   detailName: {fileID: 365762439}
@@ -21534,23 +21537,21 @@ MonoBehaviour:
   m_GameObject: {fileID: 2030573432}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 30649d3a9faa99c48a7b1166b86bf2a0, type: 3}
+  m_Script: {fileID: 11500000, guid: 8a8695521f0d02e499659fee002a26c2, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   m_Padding:
-    m_Left: 0
+    m_Left: 40
     m_Right: 0
     m_Top: 0
     m_Bottom: 0
-  m_ChildAlignment: 4
-  m_Spacing: 10
-  m_ChildForceExpandWidth: 1
-  m_ChildForceExpandHeight: 1
-  m_ChildControlWidth: 0
-  m_ChildControlHeight: 0
-  m_ChildScaleWidth: 0
-  m_ChildScaleHeight: 0
-  m_ReverseArrangement: 0
+  m_ChildAlignment: 0
+  m_StartCorner: 0
+  m_StartAxis: 0
+  m_CellSize: {x: 100, y: 100}
+  m_Spacing: {x: 100, y: 100}
+  m_Constraint: 1
+  m_ConstraintCount: 3
 --- !u!1 &2035572222
 GameObject:
   m_ObjectHideFlags: 0

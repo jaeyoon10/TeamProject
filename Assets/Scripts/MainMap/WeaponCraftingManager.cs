@@ -287,12 +287,12 @@ public class WeaponCraftingManager : MonoBehaviour
         }
     }
 
-    private int CalcStar(int score)
+    public int CalcStar(int score)
     {
-        if (score >= 80) return 5;
-        if (score >= 50) return 4;
-        if (score >= 30) return 3;
-        if (score >= 10) return 2;
+        if (score >= 90) return 5;
+        if (score >= 70) return 4;
+        if (score >= 50) return 3;
+        if (score >= 35) return 2;
         return 1;
     }
 }
