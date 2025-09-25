@@ -15,3 +15,5 @@ MonoBehaviour:
   unlockItems:
   - {fileID: 11400000, guid: 3db9444e4c37a764282bd1985c8b0ed0, type: 2}
   - {fileID: 11400000, guid: 82c86852a678960479309ac118cf093a, type: 2}
+  - {fileID: 11400000, guid: 40391041530b2af4d81a7194c2d90bd9, type: 2}
+  - {fileID: 11400000, guid: 0c6bf23edd361da419c5f930f891f75b, type: 2}

@@ -1,8 +1,10 @@
 using System.Buffers.Text;
 using System.Collections;
 using System.Collections.Generic;
+using Unity.VisualScripting;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.XR;
 public class CustomerController : MonoBehaviour
 {
     [Header("손님 애니메이터 & 위치")]
@@ -65,58 +67,65 @@ public class CustomerController : MonoBehaviour
         if (isServed) return;
         isServed = true;
 
+        Debug.Log($"[Customer] DemandRecipe={demandRecipe.weaponName}, BasePrice={demandRecipe.basePrice}");
         // 말풍선 숨기기
         worldCanvas.gameObject.SetActive(false);
 
+        // 별 개수 계산
+        int star = WeaponCraftingManager.Instance.CalcStar(qualityScore);
+
         // 1) 지불액 계산 & 추가
-        int payment = CalculatePayment(qualityScore);
+        int payment = CalculatePayment(demandRecipe.basePrice, star);
         var moneyMgr = FindObjectOfType<MoneyManager>();
         if (moneyMgr != null)
             moneyMgr.AddGold(payment);
-        CharacterInfoManager.Instance.AddProductionProfit(payment);
+        CharacterInfoManager.Instance.AddProductionProfit(payment); ;
 
-        // 2) XP 계산 & 추가 (골드 비율과 동일하게)
-        int xpGain = CalculateXP(demandRecipe.baseXP, qualityScore);
+        // 3) 경험치 계산
+        int xpGain = CalculateXP(demandRecipe.xpReward, star);
         CharacterInfoManager.Instance.AddXP(xpGain);
 
-        Debug.Log($"[Customer] XP Gained: {xpGain}");
+        Debug.Log($"[Customer] Payment={payment}, XP Gained={xpGain}");
 
 
-        int stressGain = Random.Range(0, 3);
+        int stressGain = Random.Range(1, 3);
         for (int i = 0; i < stressGain; i++)
             CharacterInfoManager.Instance.AddStressPoint();
+
         // 3) 퇴장
         StartCoroutine(Depart());
     }
 
-    int CalculatePayment(int score)
+    int CalculatePayment(int basePrice, int star)
     {
-        if (score >= 100) return 1000;
-        else if (score >= 80) return 800;
-        else if (score >= 50) return 500;
-        else if (score >= 30) return 300;
-        else if (score >= 10) return 100;
-        else return 50;
+        int bonus = 0;
+        switch (star)
+        {
+            case 5: bonus = +200; break;
+            case 4: bonus = 0; break;
+            case 3: bonus = -200; break;
+            case 2: bonus = -500; break;
+            default: bonus = -900; break;
+        }
+        int price = Mathf.Max(100, basePrice + bonus);
+        Debug.Log($"[Customer] XP Calc → base={basePrice}, star={star}, price={price}");
+        return price;
     }
 
-    private int CalculateXP(int baseXP, int score)
+    private int CalculateXP(int xpReward, int star)
     {
-        Debug.Log($"[CalculateXP] baseXP={baseXP}, score={score}");
-        if (baseXP <= 0)
+        int bonus = 0;
+        switch (star)
         {
-            Debug.LogWarning("[CalculateXP] baseXP가 0 이하! 10으로 대체");
-            baseXP = 10;
+            case 5: bonus = +10; break;   // 별 5 → 보너스
+            case 4: bonus = 0; break;     // 별 4 → 기본 그대로
+            case 3: bonus = -5; break;    // 별 3 → 약간 감소
+            case 2: bonus = -10; break;   // 별 2 → 큰 감소
+            default: bonus = -20; break;  // 별 1 이하 → 심각한 감소
         }
-        float ratio;
-        if (score >= 100) ratio = 5.0f;    // 10 경치
-        else if (score >= 80) ratio = 3.0f; //  80%
-        else if (score >= 50) ratio = 1.5f; //  50%
-        else if (score >= 30) ratio = 1f; //  30%
-        else if (score >= 10) ratio = 0.5f; //  10%
-        else ratio = 0.1f;                //   5%
 
-        int result = Mathf.RoundToInt(baseXP * ratio);
-        Debug.Log($"[CalculateXP] ratio={ratio:F2}, result={result}");
+        int result = Mathf.Max(10, xpReward + bonus); // 최소 10 보장
+        Debug.Log($"[Customer] XP Calc → base={xpReward}, star={star}, result={result}");
         return result;
     }
 

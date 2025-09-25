@@ -43,7 +43,11 @@ public class LevelUpUI : MonoBehaviour
 
     private IEnumerator PlayAnimation(int level)
     {
-        // Step 1: 배너 먼저 등장 (그대로 잠깐 보여줌)
+        // 해금 슬롯 비우기 
+        foreach (Transform child in unlockListParent)
+            Destroy(child.gameObject);
+
+        // Step 1: 배너 먼저 등장 
         banner.anchoredPosition = bannerStartPos;
         content.localScale = new Vector3(1, 0, 1);
 
@@ -100,7 +104,7 @@ public class LevelUpUI : MonoBehaviour
             if (img) img.sprite = item.icon;
             if (txt) txt.text = item.description;
 
-            // 도장 애니메이션 (작게 시작 → 커졌다가 정상 크기)
+            // 도장 애니메이션
             slot.transform.localScale = Vector3.one * 0.8f;
             var cg = slot.GetComponent<CanvasGroup>();
             if (cg == null)
@@ -133,5 +137,10 @@ public class LevelUpUI : MonoBehaviour
         // 확인 버튼 누르면 창 닫기
         gameObject.SetActive(false);
         Debug.Log("[LevelUpUI] 확인 버튼 클릭 → 창 닫힘");
+
+        if (CraftingUI.Instance != null)
+        {
+            CraftingUI.Instance.ShowList();
+        }
     }
 }

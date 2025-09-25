@@ -82,7 +82,7 @@ public class CharacterInfoManager : MonoBehaviour
             Destroy(gameObject);
             return;
         }
-        Instance = this;  // ← 추가
+        Instance = this;  
 
         ApplySavedPortrait();
 
@@ -106,7 +106,7 @@ public class CharacterInfoManager : MonoBehaviour
 
         // 골드 초기 UI
         gold = 0;
-        UpdateGoldUI();  // ← 추가
+        UpdateGoldUI();  
     }
 
     private void ApplySavedPortrait()
