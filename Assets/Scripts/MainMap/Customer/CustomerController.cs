@@ -12,10 +12,6 @@ public class CustomerController : MonoBehaviour
     public Transform targetDoor;    // 도착할 위치
     public Transform exitPoint;     // 퇴장할 위치 (Inspector에 할당)
 
-    [Header("요구 말풍선 UI")]
-    public Canvas worldCanvas;
-    public Image demandIcon;
-
     private RecipeData demandRecipe;
     private bool isServed = false;
 
@@ -30,10 +26,6 @@ public class CustomerController : MonoBehaviour
     public void BeginInteraction(RecipeData recipe)
     {
         demandRecipe = recipe;
-
-        // 말풍선 세팅
-        demandIcon.sprite = recipe.icon;
-        worldCanvas.gameObject.SetActive(true);
 
         // 걷기 애니메이션 + 이동
         animator.SetBool("isMoving", true);
@@ -57,28 +49,70 @@ public class CustomerController : MonoBehaviour
         animator.SetBool("isMoving", false);
         // 도착 알림
         WeaponCraftingManager.Instance.OnCustomerArrived(this);
+
+        yield return new WaitForSeconds(1f);
+        ShowRequestDialog();
     }
+    void ShowRequestDialog()
+    {
+        int playerLevel = CharacterInfoManager.Instance.CurrentLevel;
+
+        List<RecipeData> available = new List<RecipeData>();
+        foreach (var recipe in CraftingUI.Instance.allRecipes)
+        {
+            if (recipe.requiredLevel <= playerLevel)
+                available.Add(recipe);
+        }
+        if (available.Count == 0)
+        {
+            Debug.LogWarning("[Customer] 사용할 수 있는 레시피 없음");
+            return;
+        }
+        
+
+        demandRecipe = available[Random.Range(0, available.Count)];
+
+        DialogUIManager.Instance.ShowDialog(demandRecipe);
+
+        DialogQuestUI.Instance.SetQuestText($"{demandRecipe.weaponName}을(를) 만들어 주세요");
+    }
+
 
     /// <summary>
     /// 플레이어가 무기 전달했을 때 호출
     /// </summary>
-    public void ServeWeapon(int qualityScore)
+    public void ServeWeapon(RecipeData craftedRecipe, int qualityScore)
     {
         if (isServed) return;
         isServed = true;
 
-        Debug.Log($"[Customer] DemandRecipe={demandRecipe.weaponName}, BasePrice={demandRecipe.basePrice}");
-        // 말풍선 숨기기
-        worldCanvas.gameObject.SetActive(false);
+        DialogUIManager.Instance.HideDialog();
+        DialogQuestUI.Instance.ClearQuest();
 
+        if (craftedRecipe != demandRecipe)
+        {
+            //실패 처리
+            var moneyMgr = FindObjectOfType<MoneyManager>();
+            if (moneyMgr != null)
+                moneyMgr.AddGold(-200);
+            CharacterInfoManager.Instance.AddProductionProfit(-200);
+
+            CharacterInfoManager.Instance.AddStressPoint();
+            CharacterInfoManager.Instance.AddStressPoint();
+
+            Debug.Log("[Customer] 잘못된 무기 제공 -> 골드 -200 스트레스 +2 경험치 x");
+
+            StartCoroutine(Depart());
+            return;
+        }
         // 별 개수 계산
         int star = WeaponCraftingManager.Instance.CalcStar(qualityScore);
 
         // 1) 지불액 계산 & 추가
         int payment = CalculatePayment(demandRecipe.basePrice, star);
-        var moneyMgr = FindObjectOfType<MoneyManager>();
-        if (moneyMgr != null)
-            moneyMgr.AddGold(payment);
+        var mgr = FindObjectOfType<MoneyManager>();
+        if (mgr != null)
+            mgr.AddGold(payment);
         CharacterInfoManager.Instance.AddProductionProfit(payment); ;
 
         // 3) 경험치 계산

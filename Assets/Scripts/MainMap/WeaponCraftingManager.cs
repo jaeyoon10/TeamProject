@@ -283,7 +283,7 @@ public class WeaponCraftingManager : MonoBehaviour
 
         if (_currentCustomer != null)
         {
-            _currentCustomer.ServeWeapon(quality);
+            _currentCustomer.ServeWeapon(recipe,quality);
         }
     }
 
