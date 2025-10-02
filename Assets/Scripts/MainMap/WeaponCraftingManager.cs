@@ -154,16 +154,10 @@ public class WeaponCraftingManager : MonoBehaviour
         yield return StartCoroutine(MoveTo(heatPosition.position));
         PlayWorkAnim();
 
-        yield return StartCoroutine(LoadMiniGameScene(
-            "MiniGameFire",
-            slider =>
-            {
-                slider.onGameFinished = (penalty) =>
-                {
-                    qualityScore -= penalty;
-                };
-            }
-        ));
+       var camTrans = Camera.main.GetComponent<CameraSceneTransition>();
+        camTrans.StartZoomIn("MiniGameBrasier");
+
+        yield return new WaitUntil(() => SceneManager.GetActiveScene().name == "Ingame_main");
     }
 
     // 2) 해머 스텝

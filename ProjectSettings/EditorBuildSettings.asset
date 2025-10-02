@@ -17,7 +17,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/UIScene.unity
     guid: 1a418b0266de8f14ba6079ab860bdadd
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/MiniGameFire.unity
     guid: 8120b808bc06361458e098cb7e6c2fbd
   - enabled: 1
@@ -26,4 +26,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MiniGameRub.unity
     guid: 91d7f09fd76693c4899591b0d22caaa0
+  - enabled: 1
+    path: Assets/Scenes/MiniGameBrasier.unity
+    guid: 8f59eb9f95f4802499a4825d70ddd6fd
   m_configObjects: {}
