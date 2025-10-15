@@ -40,11 +40,24 @@ public class WeaponCraftingManager : MonoBehaviour
     private Queue<IEnumerator> craftingSteps;
     private int qualityScore;             // 0~100
 
+
+    private bool _prevAgentEnabled = false;           
+    private bool _hasAgent = false;                   
+    private UnityEngine.AI.NavMeshAgent _agent;       
+
+    private bool _hasRb = false;                      
+    private Rigidbody _rb;                            
+    private RigidbodyConstraints _prevConstraints;    
+
+    private bool _hasAnim = false;                    
+    private Animator _anim;                           
+    private bool _prevRootMotion = false;             
+
     /* ==================================================
        PUBLIC ENTRY POINT
     ==================================================*/
 
-    public static WeaponCraftingManager Instance { get; private set; }  // ← 추가
+    public static WeaponCraftingManager Instance { get; private set; }  
 
     void Awake()
     {
@@ -53,6 +66,7 @@ public class WeaponCraftingManager : MonoBehaviour
         else
             Instance = this;
 
+        CachePlayerComponents();
     }
     public void OnCustomerArrived(CustomerController customer)
     {
@@ -89,6 +103,8 @@ public class WeaponCraftingManager : MonoBehaviour
             player = GameObject.FindWithTag("Player");
             if (player == null)
                 Debug.LogError("[Crafting] Player 태그 달린 오브젝트를 찾지 못했습니다!");
+            else
+                CachePlayerComponents();
         }
 
         // 혹시 Awake 전에 호출될 수 있다면, 여기서도 한 번 안전하게 확보
@@ -120,8 +136,21 @@ public class WeaponCraftingManager : MonoBehaviour
             completePopup = FindObjectOfType<CraftingCompletePopup>(true);
             return completePopup != null;
         });
+        if (CameraTransitionData.resumeAfterReturn)
+        {
+            switch (CameraTransitionData.nextStepIndex)
+            {
+                case 1: StartCoroutine(HandleHammerStep()); break;
+                case 2: StartCoroutine(HandlePolishStep()); break;
+                case -1:
+                    int star = CalcStar(qualityScore);
+                    StartCoroutine(OnCraftingComplete(null, qualityScore, star));
+                    break;
+            }
 
-        Debug.Log("[Crafting] CraftingCompletePopup 연결 완료");
+            CameraTransitionData.resumeAfterReturn = false; // 추가됨
+            yield break; // 추가됨
+        }
 
         customerSpawner.SpawnCustomer();
     }
@@ -138,9 +167,7 @@ public class WeaponCraftingManager : MonoBehaviour
 
         int star = CalcStar(qualityScore);
 
-        //    이전에는 completePopup.Show(..., ()=>{ ... }) 였던 걸 제거하고
-        //    새 코루틴으로 교체
-        StartCoroutine(OnCraftingComplete(recipe, qualityScore, star));  // ← 변경
+        StartCoroutine(OnCraftingComplete(recipe, qualityScore, star));  
         
     }
 
@@ -150,38 +177,74 @@ public class WeaponCraftingManager : MonoBehaviour
     //----------------------------------------------------------------
     private IEnumerator HandleHeatStep()
     {
-        // 이동 & 애니
+        // 1) 자리로 이동 + 작업 포즈
         yield return StartCoroutine(MoveTo(heatPosition.position));
         PlayWorkAnim();
 
-       var camTrans = Camera.main.GetComponent<CameraSceneTransition>();
-        camTrans.StartZoomIn("MiniGameBrasier");
+        // 2) 미니게임 들어갈 동안 캐릭터 완전 고정
+        FreezePlayer();
 
+        CameraTransitionData.resumeAfterReturn = true;
+        CameraTransitionData.nextStepIndex = 1;
+        CameraTransitionData.savedQuality = qualityScore;
+
+        // 3) 카메라 줌인 + 씬 전환 (포커스 명시!)
+        var camTrans = Camera.main.GetComponent<CameraSceneTransition>();
+        if (camTrans != null)
+        {
+            camTrans.focusPoint = heatPosition;      //  포커스 지정
+            camTrans.StartZoomIn("MiniGameBrasier");
+        }
+        else
+        {
+            SceneManager.LoadScene("MiniGameBrasier");
+        }
+
+        // 4) 미니게임 끝나고 메인으로 돌아올 때까지 대기
         yield return new WaitUntil(() => SceneManager.GetActiveScene().name == "Ingame_main");
+
+        // 5) 잠금 해제 → 다음 스텝(모루)로 자연스럽게 진행
+        UnfreezePlayer();
     }
 
     // 2) 해머 스텝
     private IEnumerator HandleHammerStep()
     {
-        // 1) 자리로 이동
+        // 1) 자리로 이동 + 애니
         yield return StartCoroutine(MoveTo(hammerPosition.position));
         PlayWorkAnim();
 
-        yield return StartCoroutine(LoadMiniGameScene(
-            "MinigameHammerHit",
-            null,
-            hammer =>
-            {
-                hammer.onGameFinished = (fails, perfect) =>
-                {
-                    if (fails == 1) qualityScore -= 10;
-                    else if (fails == 2) qualityScore -= 20;
-                    else if (fails >= 3) qualityScore -= 35;
+        FreezePlayer();
 
-                    qualityScore += perfect * 5;
-                };
-            }
-        ));
+        CameraTransitionData.resumeAfterReturn = true;
+        CameraTransitionData.nextStepIndex = 2;
+        CameraTransitionData.savedQuality = qualityScore;
+
+        // 2) 카메라 줌인 + 씬 전환
+        var camTrans = Camera.main.GetComponent<CameraSceneTransition>();
+        if (camTrans != null)
+        {
+            camTrans.focusPoint = hammerPosition;              //  포커스 지점 지정
+            camTrans.StartZoomIn("MiniGameHammer");         //  망치 미니게임 씬명
+        }
+        else
+        {
+            SceneManager.LoadScene("MiniGameHammer");
+        }
+
+        // 3) 미니게임 끝나고 Ingame_main으로 복귀할 때까지 대기
+        yield return new WaitUntil(() => SceneManager.GetActiveScene().name == "Ingame_main");
+
+        // 4) 결과 반영 (정적 버스에서 회수)
+        if (HammerResultData.hasValue)
+        {
+            var r = HammerResultData.Consume();
+            if (r.fails == 1) qualityScore -= 10;
+            else if (r.fails == 2) qualityScore -= 20;
+            else if (r.fails >= 3) qualityScore -= 35;
+
+            qualityScore += r.perfect * 5;
+        }
     }
 
     // 3) 연마 스텝
@@ -190,18 +253,32 @@ public class WeaponCraftingManager : MonoBehaviour
         yield return StartCoroutine(MoveTo(polishPosition.position));
         PlayWorkAnim();
 
-        yield return StartCoroutine(LoadMiniGameScene(
-           "MiniGameRub",
-           null,
-           null,
-           polish =>
-           {
-               polish.onGameFinished = (fails) =>
-               {
-                   qualityScore -= fails * 20;
-               };
-           }
-       ));
+        FreezePlayer();
+
+        CameraTransitionData.resumeAfterReturn = true;
+        CameraTransitionData.nextStepIndex = -1;
+        CameraTransitionData.savedQuality = qualityScore;
+
+        var camTrans = Camera.main.GetComponent<CameraSceneTransition>();
+        if (camTrans != null)
+        {
+            camTrans.focusPoint = polishPosition;              //  포커스 지점 지정
+            camTrans.StartZoomIn("MiniGameRub");               // 연마 미니게임 씬명
+        }
+        else
+        {
+            SceneManager.LoadScene("MiniGameRub");
+        }
+
+        yield return new WaitUntil(() => SceneManager.GetActiveScene().name == "Ingame_main");
+
+        UnfreezePlayer();
+
+        if (PolishResultData.hasValue)
+        {
+            int fails = PolishResultData.Consume();
+            qualityScore -= fails * 20;
+        }
     }
 
     /* ==================================================
@@ -288,6 +365,50 @@ public class WeaponCraftingManager : MonoBehaviour
         if (score >= 50) return 3;
         if (score >= 35) return 2;
         return 1;
+    }
+    // ==== 플레이어 잠금/해제 유틸 ====
+    private void CachePlayerComponents() // 추가됨
+    {
+        if (player == null) return;
+        if (_anim == null) { _anim = player.GetComponent<Animator>(); _hasAnim = _anim != null; }
+        if (_agent == null) { _agent = player.GetComponent<UnityEngine.AI.NavMeshAgent>(); _hasAgent = _agent != null; }
+        if (_rb == null) { _rb = player.GetComponent<Rigidbody>(); _hasRb = _rb != null; }
+    }
+
+    private void FreezePlayer() // 추가됨
+    {
+        CachePlayerComponents();
+
+        if (_hasAnim)
+        {
+            _prevRootMotion = _anim.applyRootMotion;
+            _anim.applyRootMotion = false;
+            _anim.ResetTrigger("Work");
+            _anim.Update(0f);
+        }
+
+        if (_hasAgent)
+        {
+            _prevAgentEnabled = _agent.enabled;
+            _agent.isStopped = true;
+            _agent.ResetPath();
+            _agent.enabled = false;
+        }
+
+        if (_hasRb)
+        {
+            _prevConstraints = _rb.constraints;
+            _rb.velocity = Vector3.zero;
+            _rb.angularVelocity = Vector3.zero;
+            _rb.constraints = RigidbodyConstraints.FreezeAll;
+        }
+    }
+
+    private void UnfreezePlayer() // 추가됨
+    {
+        if (_hasAnim) _anim.applyRootMotion = _prevRootMotion;
+        if (_hasAgent) _agent.enabled = _prevAgentEnabled;
+        if (_hasRb) _rb.constraints = _prevConstraints;
     }
 }
 

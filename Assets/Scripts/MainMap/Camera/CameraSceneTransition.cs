@@ -138,4 +138,5 @@ public class CameraSceneTransition : MonoBehaviour
             yield return null;
         }
     }
+
 }

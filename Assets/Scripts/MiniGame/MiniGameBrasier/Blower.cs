@@ -128,12 +128,32 @@ public class Blower : MonoBehaviour
         {
             heatGauge.value = heatGauge.maxValue;
             gameCompleted = true;
+            SaveHeatedIngotState();
+
             StartCoroutine(EndMiniGameAfterDelay(1f)); // 1초 후 줌 아웃
         }
 
         // 게이지 자연 감소
         if (heatGauge.value > 0f)
             heatGauge.value -= decreaseSpeed * Time.deltaTime;
+    }
+
+    void SaveHeatedIngotState()
+    {
+        // 대표 주괴 하나 기준(0번). 둘 중 더 뜨거운걸 쓰고 싶으면 t 비교해서 선택해도 됨.
+        Renderer r = (ingots != null && ingots.Length > 0) ? ingots[0] : null;
+        if (r == null) { IngotHeatData.Clear(); return; }
+
+        // 머티리얼에서 현재 컬러/에미션 뽑기
+        var mat = r.material; // 인스턴스 복사
+        Color baseCol = mat.color;
+        Color emissCol = Color.black;
+        if (mat.HasProperty("_EmissionColor"))
+            emissCol = mat.GetColor("_EmissionColor");
+
+        float t = (heatGauge != null) ? heatGauge.normalizedValue : 0f;
+
+        IngotHeatData.Save(baseCol, emissCol, t);
     }
 
     IEnumerator EndMiniGameAfterDelay(float delay)

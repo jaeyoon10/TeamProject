@@ -20,7 +20,7 @@ EditorBuildSettings:
   - enabled: 0
     path: Assets/Scenes/MiniGameFire.unity
     guid: 8120b808bc06361458e098cb7e6c2fbd
-  - enabled: 1
+  - enabled: 0
     path: Assets/Scenes/MinigameHammerHIt.unity
     guid: c9331c4ea91c0ac43a45fc15c489d03b
   - enabled: 1
@@ -29,4 +29,7 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/MiniGameBrasier.unity
     guid: 8f59eb9f95f4802499a4825d70ddd6fd
+  - enabled: 1
+    path: Assets/Scenes/MiniGameHammer.unity
+    guid: 8d24fef8f1f04fe4cb7c7529b73aa401
   m_configObjects: {}

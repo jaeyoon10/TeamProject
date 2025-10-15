@@ -12,4 +12,8 @@ public static class CameraTransitionData
     // 전환 상태
     public static bool continueZoomIn;
     public static bool continueZoomOut;
+
+    public static bool resumeAfterReturn;   // 추가됨
+    public static int nextStepIndex;        // 추가됨 (1=해머, 2=연마, -1=완료)
+    public static int savedQuality;         // 추가됨 (품질 점수 이어 받기)
 }
