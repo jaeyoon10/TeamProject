@@ -104,7 +104,7 @@ public class WeaponCraftingManager : MonoBehaviour
         craftingSteps = new Queue<IEnumerator>();
         craftingSteps.Enqueue(HandleHeatStep(recipe));
         craftingSteps.Enqueue(HandleHammerStep());
-        //craftingSteps.Enqueue(HandleGrindingStep()); //Grinding 나중에 추가될 예정
+        craftingSteps.Enqueue(HandleGrindingStep()); //Grinding 나중에 추가될 예정
 
         StartCoroutine(ProcessCrafting(recipe));
     }
@@ -190,48 +190,49 @@ public class WeaponCraftingManager : MonoBehaviour
             else if (r.fails >= 3) qualityScore -= 35;
             qualityScore += r.perfect * 5;
         }
+    }
 
-        //=================== Grinding ========================
-        /*IEnumerable HandleGrindingStep()
+    //=================== Grinding ========================
+    IEnumerator HandleGrindingStep()
+    {
+        yield return StartCoroutine(MoveTo(grindingPosition.position));
+        PlayWorkAnim();
+
+        MiniSceneBinding bind = null;
+        yield return StartCoroutine(LoadMiniSceneAndBind(
+            grindingSceneName, "GrindingModule",
+            r => bind = r
+        ));
+
+        if (bind == null || bind.root == null || bind.cam == null)
         {
-            yield return StartCoroutine(MoveTo(grindingPosition.position));
-            PlayWorkAnim();
+            Debug.LogError("[Crafting] Grinding 바인딩 실패");
+            yield break;
+        }
 
-            MiniSceneBinding bind = null;
-            yield return StartCoroutine(LoadMiniSceneAndBind(
-                grindingSceneName, "GrindingModule",
-                r => bind = r
-            ));
+        // 2) 진입(카메라 스왑)
+        camSwap.EnterMiniGame(bind.cam, bind.root, bind.ui);
 
-            if (bind == null || bind.root == null || bind.cam == null)
-            {
-                Debug.LogError("[Crafting] Grinding 바인딩 실패");
-                yield break;
-            }
+        // 3) 완료 대기 (Blower가 MiniGameState.FurnaceDone = true 설정)
+        yield return new WaitUntil(() => MiniGameState.GrindingDone);
+        MiniGameState.GrindingDone = false;
 
-            // 2) 진입(카메라 스왑)
-            camSwap.EnterMiniGame(bind.cam, bind.root, bind.ui);
+        // 4) 종료(복귀)
+        camSwap.ExitMiniGame(bind.cam, bind.root, bind.ui);
 
-            // 3) 완료 대기 (Blower가 MiniGameState.FurnaceDone = true 설정)
-            yield return new WaitUntil(() => MiniGameState.GrindingDone);
-            MiniGameState.GrindingDone = false;
-
-            // 4) 종료(복귀)
-            camSwap.ExitMiniGame(bind.cam, bind.root, bind.ui);
-
-            /*if (PolishResultData.hasValue)         // 네가 예전 코드에서 쓰던 데이터 구조
-            {
-                int fails = PolishResultData.Consume();
-                qualityScore -= fails * 20;        // 원하는 규칙으로 조정
-            }
-            // 5) 씬 언로드
-            yield return SceneManager.UnloadSceneAsync(grindingSceneName);
-
+        /*if (PolishResultData.hasValue)         // 네가 예전 코드에서 쓰던 데이터 구조
+        {
+            int fails = PolishResultData.Consume();
+            qualityScore -= fails * 20;        // 원하는 규칙으로 조정
         }*/
+
+        // 5) 씬 언로드
+        yield return SceneManager.UnloadSceneAsync(grindingSceneName);
 
     }
 
-    // ================== 공통 로더/바인더 ==================
+
+// ================== 공통 로더/바인더 ==================
     private IEnumerator LoadMiniSceneAndBind(string sceneName, string moduleRootName, System.Action<MiniSceneBinding> onDone)
     {
         MiniSceneBinding result = new MiniSceneBinding();

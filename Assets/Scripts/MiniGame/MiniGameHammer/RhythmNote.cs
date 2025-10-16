@@ -62,4 +62,5 @@ public class RhythmNote : MonoBehaviour
             Destroy(gameObject);
         }
     }
+
 }
