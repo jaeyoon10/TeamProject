@@ -24,7 +24,7 @@ EditorBuildSettings:
     path: Assets/Scenes/MinigameHammerHIt.unity
     guid: c9331c4ea91c0ac43a45fc15c489d03b
   - enabled: 1
-    path: Assets/Scenes/MiniGameRub.unity
+    path: Assets/Scenes/MiniGameGrinding.unity
     guid: 91d7f09fd76693c4899591b0d22caaa0
   - enabled: 1
     path: Assets/Scenes/MiniGameBrasier.unity
