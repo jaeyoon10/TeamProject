@@ -1,361 +1,316 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.EventSystems;
 using UnityEngine.SceneManagement;
 
 public class WeaponCraftingManager : MonoBehaviour
 {
-    /* --------------------------------------------------
-       INSPECTOR FIELDS
-    --------------------------------------------------*/
-
-    [Header("Customer Spawner")]
-    public CustomerSpawner customerSpawner;  // 인스펙터에 연결!
-    private CustomerController _currentCustomer;
-
-    [Header("작업대 앞 위치 (빈 오브젝트)")]
-    public Transform heatPosition;
-    public Transform hammerPosition;
-    public Transform polishPosition;
-
-    [Header("제작 캐릭터")]
+    [Header("Customer/Player")]
+    public CustomerSpawner customerSpawner;
     public GameObject player;
     public float moveSpeed = 2f;
 
-    [Header("UI 연결 (제작 완료 팝업)")]
-    public CraftingCompletePopup completePopup;   // 별·이름·아이콘 표시용 UI
-
-    [Header("스트레스 시스템")]
-    public int currentStress = 0;
-    public int maxStress = 10;
-    public System.Action<int> OnStressChanged;
-
-    [Header("문(손님 위치) : 완료 시 이동할 곳")]
+    [Header("Anchors")]
+    public Transform heatPosition;
+    public Transform hammerPosition;
+    public Transform grindingPosition;
     public Transform doorPosition;
 
-    /* --------------------------------------------------
-       내부 변수
-    --------------------------------------------------*/
+    [Header("Result UI")]
+    public CraftingCompletePopup completePopup;
+
+    [Header("Camera Swap")]
+    public CameraSwap camSwap; // MainCamera에 붙은 컴포넌트
+
+    [Header("MiniGame Scene Names")]
+    public string furnaceSceneName = "MiniGameBrasier";
+    public string anvilSceneName = "MiniGameHammer";
+    public string grindingSceneName = "MiniGameGrinding";
+
+
+    [System.Serializable]
+    public class MiniSceneBinding
+    {
+        public GameObject root;  // 모듈 루트 (예: FurnaceModule, AnvilModule)
+        public Camera cam;       // 미니게임 전용 카메라
+        public Canvas ui;        // 미니게임 UI(Canvas)
+    }
+
     private Queue<IEnumerator> craftingSteps;
-    private int qualityScore;             // 0~100
+    private int qualityScore;
+    private CustomerController _currentCustomer;
 
-
-    private bool _prevAgentEnabled = false;           
-    private bool _hasAgent = false;                   
-    private UnityEngine.AI.NavMeshAgent _agent;       
-
-    private bool _hasRb = false;                      
-    private Rigidbody _rb;                            
-    private RigidbodyConstraints _prevConstraints;    
-
-    private bool _hasAnim = false;                    
-    private Animator _anim;                           
-    private bool _prevRootMotion = false;             
-
-    /* ==================================================
-       PUBLIC ENTRY POINT
-    ==================================================*/
-
-    public static WeaponCraftingManager Instance { get; private set; }  
+    public static WeaponCraftingManager Instance { get; private set; }
 
     void Awake()
     {
-        if (Instance != null && Instance != this)
-            Destroy(gameObject);
-        else
-            Instance = this;
+        if (Instance != null && Instance != this) { Destroy(gameObject); return; }
+        Instance = this;
+    }
 
-        CachePlayerComponents();
-    }
-    public void OnCustomerArrived(CustomerController customer)
+    IEnumerator Start()
     {
-        _currentCustomer = customer;
+        MiniGameState.ResetAll();
+
+        if (!player) player = GameObject.FindWithTag("Player");
+        if (!completePopup) completePopup = FindObjectOfType<CraftingCompletePopup>(true);
+        if (!customerSpawner) customerSpawner = FindObjectOfType<CustomerSpawner>();
+
+        yield return new WaitUntil(() => customerSpawner != null && customerSpawner.IsReady);
+
+        // 준비된 뒤 스폰 (한 번 더 안전)
+        yield return StartCoroutine(customerSpawner.SpawnWhenReady());
     }
+
+    public void OnCustomerArrived(CustomerController c) => _currentCustomer = c;
 
     public void StartCrafting(RecipeData recipe)
     {
-        // 1) CharacterInfoManager 찾아서
-        var info = FindObjectOfType<CharacterInfoManager>();
-        if (info == null)
-            Debug.LogError("CharacterInfoManager가 없습니다!");
-        else
-        {
-            // 2) PlayerPrefs에 저장된 키로 어떤 캐릭터인지 확인
-            string sel = PlayerPrefs.GetString("SelectedCharacter", "");
-            switch (sel)
+        var info = FindObjectOfType<CharacterInfoManager>(); 
+        if (info == null) 
+            Debug.LogError("CharacterInfoManager가 없습니다!"); 
+        else 
+        { 
+            string sel = PlayerPrefs.GetString("SelectedCharacter", ""); 
+            switch (sel) 
             {
-                case "Edwin":
-                    info.SetCharacterPortrait(info.edwinPortrait);
-                    break;
-                case "Isabella":
-                    info.SetCharacterPortrait(info.isabellaPortrait);
-                    break;
-                case "Tusk":
-                    info.SetCharacterPortrait(info.tuskPortrait);
-                    break;
-            }
+                case "Edwin": 
+                    info.SetCharacterPortrait(info.edwinPortrait); 
+                    break; 
+                case "Isabella": 
+                    info.SetCharacterPortrait(info.isabellaPortrait); 
+                    break; 
+                case "Tusk": 
+                    info.SetCharacterPortrait(info.tuskPortrait); 
+                    break; 
+            } 
+        } 
+        if (player == null) 
+        { 
+            player = GameObject.FindWithTag("Player"); 
+            if (player == null) 
+                Debug.LogError("[Crafting] Player 태그 달린 오브젝트를 찾지 못했습니다!"); 
+        } 
+        if (completePopup == null) 
+        { 
+            completePopup = FindObjectOfType<CraftingCompletePopup>(true); 
+            if (completePopup == null) 
+                Debug.LogError("[Crafting] CraftingCompletePopup을 찾을 수 없습니다!"); 
         }
 
-        // CharacterJLoader 가 Start() 에서 태그를 붙인 뒤라면
-        if (player == null)
-        {
-            player = GameObject.FindWithTag("Player");
-            if (player == null)
-                Debug.LogError("[Crafting] Player 태그 달린 오브젝트를 찾지 못했습니다!");
-            else
-                CachePlayerComponents();
-        }
+        qualityScore = 100;
 
-        // 혹시 Awake 전에 호출될 수 있다면, 여기서도 한 번 안전하게 확보
-        if (completePopup == null)
-        {
-            completePopup = FindObjectOfType<CraftingCompletePopup>(true);
-            if (completePopup == null)
-                Debug.LogError("[Crafting] CraftingCompletePopup을 찾을 수 없습니다!");
-        }
-
-        qualityScore = 100;               // 점수 초기화
-
+        // 🔹 제작 단계 등록
         craftingSteps = new Queue<IEnumerator>();
-        craftingSteps.Enqueue(HandleHeatStep());
+        craftingSteps.Enqueue(HandleHeatStep(recipe));
         craftingSteps.Enqueue(HandleHammerStep());
-        craftingSteps.Enqueue(HandlePolishStep());
+        //craftingSteps.Enqueue(HandleGrindingStep()); //Grinding 나중에 추가될 예정
 
         StartCoroutine(ProcessCrafting(recipe));
     }
 
-    private IEnumerator Start()
-    {
-        // UIScene이 로드될 때까지 대기
-        yield return new WaitUntil(() => SceneManager.GetSceneByName("UIScene").isLoaded);
-
-        // CraftingCompletePopup 찾기 (비활성 포함)
-        yield return new WaitUntil(() =>
-        {
-            completePopup = FindObjectOfType<CraftingCompletePopup>(true);
-            return completePopup != null;
-        });
-        if (CameraTransitionData.resumeAfterReturn)
-        {
-            switch (CameraTransitionData.nextStepIndex)
-            {
-                case 1: StartCoroutine(HandleHammerStep()); break;
-                case 2: StartCoroutine(HandlePolishStep()); break;
-                case -1:
-                    int star = CalcStar(qualityScore);
-                    StartCoroutine(OnCraftingComplete(null, qualityScore, star));
-                    break;
-            }
-
-            CameraTransitionData.resumeAfterReturn = false; // 추가됨
-            yield break; // 추가됨
-        }
-
-        customerSpawner.SpawnCustomer();
-    }
-
-    /* ==================================================
-       메인 제작 루프
-    ==================================================*/
-    private IEnumerator ProcessCrafting(RecipeData recipe)
+    IEnumerator ProcessCrafting(RecipeData recipe)
     {
         while (craftingSteps.Count > 0)
             yield return StartCoroutine(craftingSteps.Dequeue());
 
-        yield return new WaitForSeconds(0.3f);
+        yield return new WaitForSeconds(0.2f);
 
         int star = CalcStar(qualityScore);
-
-        StartCoroutine(OnCraftingComplete(recipe, qualityScore, star));  
-        
+        yield return StartCoroutine(OnCraftingComplete(recipe, qualityScore, star));
     }
 
-    /* ==================================================
-       각 스텝 코루틴
-    ==================================================*/
-    //----------------------------------------------------------------
-    private IEnumerator HandleHeatStep()
+    // ================== Heat (Furnace) ==================
+    IEnumerator HandleHeatStep(RecipeData recipe)
     {
-        // 1) 자리로 이동 + 작업 포즈
         yield return StartCoroutine(MoveTo(heatPosition.position));
         PlayWorkAnim();
 
-        // 2) 미니게임 들어갈 동안 캐릭터 완전 고정
-        FreezePlayer();
+        // 1) 씬 로드 + 바인딩
+        MiniSceneBinding bind = null;
+        yield return StartCoroutine(LoadMiniSceneAndBind(
+            furnaceSceneName, "FurnaceModule",
+            r => bind = r
+        ));
 
-        CameraTransitionData.resumeAfterReturn = true;
-        CameraTransitionData.nextStepIndex = 1;
-        CameraTransitionData.savedQuality = qualityScore;
-
-        // 3) 카메라 줌인 + 씬 전환 (포커스 명시!)
-        var camTrans = Camera.main.GetComponent<CameraSceneTransition>();
-        if (camTrans != null)
+        // 방어
+        if (bind == null || bind.root == null || bind.cam == null)
         {
-            camTrans.focusPoint = heatPosition;      //  포커스 지정
-            camTrans.StartZoomIn("MiniGameBrasier");
-        }
-        else
-        {
-            SceneManager.LoadScene("MiniGameBrasier");
+            Debug.LogError("[Crafting] Furnace 바인딩 실패");
+            yield break;
         }
 
-        // 4) 미니게임 끝나고 메인으로 돌아올 때까지 대기
-        yield return new WaitUntil(() => SceneManager.GetActiveScene().name == "Ingame_main");
+        // 2) 진입(카메라 스왑)
+        camSwap.EnterMiniGame(bind.cam, bind.root, bind.ui);
 
-        // 5) 잠금 해제 → 다음 스텝(모루)로 자연스럽게 진행
-        UnfreezePlayer();
+        // 3) 완료 대기 (Blower가 MiniGameState.FurnaceDone = true 설정)
+        yield return new WaitUntil(() => MiniGameState.FurnaceDone);
+        MiniGameState.FurnaceDone = false;
+
+        // 4) 종료(복귀)
+        camSwap.ExitMiniGame(bind.cam, bind.root, bind.ui);
+
+        // 5) 씬 언로드
+        yield return SceneManager.UnloadSceneAsync(furnaceSceneName);
     }
 
-    // 2) 해머 스텝
-    private IEnumerator HandleHammerStep()
+    // ================== Hammer (Anvil Rhythm) ==================
+    IEnumerator HandleHammerStep()
     {
-        // 1) 자리로 이동 + 애니
         yield return StartCoroutine(MoveTo(hammerPosition.position));
         PlayWorkAnim();
 
-        FreezePlayer();
+        MiniSceneBinding bind = null;
+        yield return StartCoroutine(LoadMiniSceneAndBind(
+            anvilSceneName, "AnvilModule",
+            r => bind = r
+        ));
 
-        CameraTransitionData.resumeAfterReturn = true;
-        CameraTransitionData.nextStepIndex = 2;
-        CameraTransitionData.savedQuality = qualityScore;
-
-        // 2) 카메라 줌인 + 씬 전환
-        var camTrans = Camera.main.GetComponent<CameraSceneTransition>();
-        if (camTrans != null)
+        if (bind == null || bind.root == null || bind.cam == null)
         {
-            camTrans.focusPoint = hammerPosition;              //  포커스 지점 지정
-            camTrans.StartZoomIn("MiniGameHammer");         //  망치 미니게임 씬명
-        }
-        else
-        {
-            SceneManager.LoadScene("MiniGameHammer");
+            Debug.LogError("[Crafting] Anvil 바인딩 실패");
+            yield break;
         }
 
-        // 3) 미니게임 끝나고 Ingame_main으로 복귀할 때까지 대기
-        yield return new WaitUntil(() => SceneManager.GetActiveScene().name == "Ingame_main");
+        camSwap.EnterMiniGame(bind.cam, bind.root, bind.ui);
 
-        // 4) 결과 반영 (정적 버스에서 회수)
+        // RhythmGameManager가 끝날 때 MiniGameState.HammerDone = true 설정
+        yield return new WaitUntil(() => MiniGameState.HammerDone);
+        MiniGameState.HammerDone = false;
+
+        camSwap.ExitMiniGame(bind.cam, bind.root, bind.ui);
+        yield return SceneManager.UnloadSceneAsync(anvilSceneName);
+
+        // 품질 반영
         if (HammerResultData.hasValue)
         {
             var r = HammerResultData.Consume();
             if (r.fails == 1) qualityScore -= 10;
             else if (r.fails == 2) qualityScore -= 20;
             else if (r.fails >= 3) qualityScore -= 35;
-
             qualityScore += r.perfect * 5;
         }
+
+        //=================== Grinding ========================
+        /*IEnumerable HandleGrindingStep()
+        {
+            yield return StartCoroutine(MoveTo(grindingPosition.position));
+            PlayWorkAnim();
+
+            MiniSceneBinding bind = null;
+            yield return StartCoroutine(LoadMiniSceneAndBind(
+                grindingSceneName, "GrindingModule",
+                r => bind = r
+            ));
+
+            if (bind == null || bind.root == null || bind.cam == null)
+            {
+                Debug.LogError("[Crafting] Grinding 바인딩 실패");
+                yield break;
+            }
+
+            // 2) 진입(카메라 스왑)
+            camSwap.EnterMiniGame(bind.cam, bind.root, bind.ui);
+
+            // 3) 완료 대기 (Blower가 MiniGameState.FurnaceDone = true 설정)
+            yield return new WaitUntil(() => MiniGameState.GrindingDone);
+            MiniGameState.GrindingDone = false;
+
+            // 4) 종료(복귀)
+            camSwap.ExitMiniGame(bind.cam, bind.root, bind.ui);
+
+            /*if (PolishResultData.hasValue)         // 네가 예전 코드에서 쓰던 데이터 구조
+            {
+                int fails = PolishResultData.Consume();
+                qualityScore -= fails * 20;        // 원하는 규칙으로 조정
+            }
+            // 5) 씬 언로드
+            yield return SceneManager.UnloadSceneAsync(grindingSceneName);
+
+        }*/
+
     }
 
-    // 3) 연마 스텝
-    private IEnumerator HandlePolishStep()
+    // ================== 공통 로더/바인더 ==================
+    private IEnumerator LoadMiniSceneAndBind(string sceneName, string moduleRootName, System.Action<MiniSceneBinding> onDone)
     {
-        yield return StartCoroutine(MoveTo(polishPosition.position));
-        PlayWorkAnim();
+        MiniSceneBinding result = new MiniSceneBinding();
 
-        FreezePlayer();
-
-        CameraTransitionData.resumeAfterReturn = true;
-        CameraTransitionData.nextStepIndex = -1;
-        CameraTransitionData.savedQuality = qualityScore;
-
-        var camTrans = Camera.main.GetComponent<CameraSceneTransition>();
-        if (camTrans != null)
+        // 씬 로드 대기 (완료 + 한 프레임 유예)
+        if (!SceneManager.GetSceneByName(sceneName).isLoaded)
         {
-            camTrans.focusPoint = polishPosition;              //  포커스 지점 지정
-            camTrans.StartZoomIn("MiniGameRub");               // 연마 미니게임 씬명
+            var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
+            while (!op.isDone) yield return null;
         }
-        else
+        yield return null;
+
+        Scene miniScene = SceneManager.GetSceneByName(sceneName);
+        if (!miniScene.IsValid())
         {
-            SceneManager.LoadScene("MiniGameRub");
+            Debug.LogError($"[Crafting] '{sceneName}' 씬 로드 실패");
+            onDone?.Invoke(result);
+            yield break;
         }
 
-        yield return new WaitUntil(() => SceneManager.GetActiveScene().name == "Ingame_main");
+        // 루트 탐색 (이름 우선 → 없으면 첫 번째)
+        GameObject[] roots = miniScene.GetRootGameObjects();
+        GameObject moduleRoot = null;
 
-        UnfreezePlayer();
-
-        if (PolishResultData.hasValue)
+        if (!string.IsNullOrEmpty(moduleRootName))
         {
-            int fails = PolishResultData.Consume();
-            qualityScore -= fails * 20;
+            foreach (var go in roots)
+            {
+                if (go.name == moduleRootName) { moduleRoot = go; break; }
+            }
         }
+        if (!moduleRoot && roots.Length > 0) moduleRoot = roots[0];
+
+        result.root = moduleRoot;
+        if (moduleRoot)
+        {
+            result.cam = moduleRoot.GetComponentInChildren<Camera>(true);
+            result.ui = moduleRoot.GetComponentInChildren<Canvas>(true);
+
+            if (result.ui) result.ui.enabled = false;
+            if (result.cam) result.cam.enabled = false;
+            moduleRoot.SetActive(false);
+        }
+
+        onDone?.Invoke(result);
     }
 
-    /* ==================================================
-       공통 유틸
-    ==================================================*/
+    // ================== 유틸 ==================
     private void PlayWorkAnim()
     {
-        var anim = player.GetComponent<Animator>();
+        var anim = player ? player.GetComponent<Animator>() : null;
         if (anim) anim.SetTrigger("Work");
     }
 
-    //----------------------------------------------------------------
-    private IEnumerator MoveTo(Vector3 target)
+    IEnumerator MoveTo(Vector3 target)
     {
         while (Vector3.Distance(player.transform.position, target) > 0.05f)
         {
+            if (camSwap && camSwap.IsLocked) { yield return null; continue; }
+
             Vector3 dir = (target - player.transform.position).normalized;
             player.transform.forward = new Vector3(dir.x, 0, dir.z);
-            player.transform.position = Vector3.MoveTowards(player.transform.position, target, moveSpeed * Time.deltaTime);
+            player.transform.position =
+                Vector3.MoveTowards(player.transform.position, target, moveSpeed * Time.deltaTime);
             yield return null;
         }
+        player.transform.position = target;
     }
 
-    //----------------------------------------------------------------
-    private IEnumerator LoadMiniGameScene(
-    string sceneName,
-    System.Action<SliderController> onSliderLoaded = null,
-    System.Action<HammerMiniGame> onHammerLoaded = null,
-    System.Action<SharpeningSwipeGame> onPolishLoaded = null)
+    IEnumerator OnCraftingComplete(RecipeData recipe, int quality, int star)
     {
-        // 1. Additive 로드
-        var op = SceneManager.LoadSceneAsync(sceneName, LoadSceneMode.Additive);
-        while (!op.isDone) yield return null;
-        yield return null; // 1프레임 유예
-
-        // 2. 씬의 루트 오브젝트 전부 가져오기
-        var miniScene = SceneManager.GetSceneByName(sceneName);
-        var roots = miniScene.GetRootGameObjects();
-
-        foreach (var root in roots)
-        {
-            if (onSliderLoaded != null)
-            {
-                var slider = root.GetComponentInChildren<SliderController>(true);
-                if (slider != null) onSliderLoaded(slider);
-            }
-
-            if (onHammerLoaded != null)
-            {
-                var hammer = root.GetComponentInChildren<HammerMiniGame>(true);
-                if (hammer != null) onHammerLoaded(hammer);
-            }
-
-            if (onPolishLoaded != null)
-            {
-                var polish = root.GetComponentInChildren<SharpeningSwipeGame>(true);
-                if (polish != null) onPolishLoaded(polish);
-            }
-        }
-
-        yield return new WaitUntil(() => !SceneManager.GetSceneByName(sceneName).isLoaded);
-    }
-
-    private IEnumerator OnCraftingComplete(RecipeData recipe, int quality, int star)
-    {
-        bool popupClosed = false;
-        completePopup.Show(recipe, quality, star, () => popupClosed = true);
-        yield return new WaitUntil(() => popupClosed);
+        bool closed = false;
+        completePopup.Show(recipe, quality, star, () => closed = true);
+        yield return new WaitUntil(() => closed);
 
         yield return StartCoroutine(MoveTo(doorPosition.position));
-
         yield return new WaitForSeconds(1f);
 
-        if (_currentCustomer != null)
-        {
-            _currentCustomer.ServeWeapon(recipe,quality);
-        }
+        _currentCustomer?.ServeWeapon(recipe, quality);
     }
 
     public int CalcStar(int score)
@@ -366,49 +321,4 @@ public class WeaponCraftingManager : MonoBehaviour
         if (score >= 35) return 2;
         return 1;
     }
-    // ==== 플레이어 잠금/해제 유틸 ====
-    private void CachePlayerComponents() // 추가됨
-    {
-        if (player == null) return;
-        if (_anim == null) { _anim = player.GetComponent<Animator>(); _hasAnim = _anim != null; }
-        if (_agent == null) { _agent = player.GetComponent<UnityEngine.AI.NavMeshAgent>(); _hasAgent = _agent != null; }
-        if (_rb == null) { _rb = player.GetComponent<Rigidbody>(); _hasRb = _rb != null; }
-    }
-
-    private void FreezePlayer() // 추가됨
-    {
-        CachePlayerComponents();
-
-        if (_hasAnim)
-        {
-            _prevRootMotion = _anim.applyRootMotion;
-            _anim.applyRootMotion = false;
-            _anim.ResetTrigger("Work");
-            _anim.Update(0f);
-        }
-
-        if (_hasAgent)
-        {
-            _prevAgentEnabled = _agent.enabled;
-            _agent.isStopped = true;
-            _agent.ResetPath();
-            _agent.enabled = false;
-        }
-
-        if (_hasRb)
-        {
-            _prevConstraints = _rb.constraints;
-            _rb.velocity = Vector3.zero;
-            _rb.angularVelocity = Vector3.zero;
-            _rb.constraints = RigidbodyConstraints.FreezeAll;
-        }
-    }
-
-    private void UnfreezePlayer() // 추가됨
-    {
-        if (_hasAnim) _anim.applyRootMotion = _prevRootMotion;
-        if (_hasAgent) _agent.enabled = _prevAgentEnabled;
-        if (_hasRb) _rb.constraints = _prevConstraints;
-    }
 }
-

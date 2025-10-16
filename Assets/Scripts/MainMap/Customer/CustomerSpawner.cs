@@ -13,6 +13,8 @@ public class CustomerSpawner : MonoBehaviour
     private Transform exitPoint;
     public Transform targetDoor;
 
+    public bool IsReady { get; private set; } = false;
+
     IEnumerator Start()
     {
         // CraftingUI가 로드될 때까지 대기
@@ -28,6 +30,20 @@ public class CustomerSpawner : MonoBehaviour
         var doorgo = GameObject.Find("CustomerDoorObject");
         if (doorgo != null) targetDoor = doorgo.transform;
         else Debug.LogError("CustomerDoorObject 씬에 없습니다!");
+
+        if (!customerPrefab) Debug.LogError("[CustomerSpawner] customerPrefab 미지정!");
+        if (!spawnPoint) Debug.LogError("[CustomerSpawner] spawnPoint 미지정!");
+        if (!craftingUI) Debug.LogError("[CustomerSpawner] craftingUI 미지정!");
+        if (!exitPoint) Debug.LogError("[CustomerSpawner] exitPoint 미지정!");
+        if (!targetDoor) Debug.LogError("[CustomerSpawner] targetDoor 미지정!");
+
+        IsReady = (customerPrefab && spawnPoint && craftingUI && exitPoint && targetDoor);
+    }
+
+    public IEnumerator SpawnWhenReady()
+    {
+        yield return new WaitUntil(() => IsReady);
+        SpawnCustomer();
     }
 
     public void SpawnCustomer()

@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 
 public enum Judgement { Perfect, Great, Good, Miss }
 public enum Lane { A, D }
@@ -11,23 +10,23 @@ public enum Lane { A, D }
 public class RhythmGameManager : MonoBehaviour
 {
     [Header("UI 구조")]
-    public RectTransform playArea;      // 갈색 판 부모
-    public RectTransform judgeZoneRect; // 회색 원
-    public RectTransform spawnPoint;    // 오른쪽 끝 스폰 지점
-    public RhythmNote notePrefab;       // 노트 프리팹 (Image)
+    public RectTransform playArea;
+    public RectTransform judgeZoneRect;
+    public RectTransform spawnPoint;
+    public RhythmNote notePrefab;
 
     [Header("표시 텍스트들(선택)")]
     public Text judgeText;
 
     [Header("속도/간격")]
-    public float scrollSpeed = 350f;    // px/sec
-    public float spawnInterval = 0.6f;  // 초
+    public float scrollSpeed = 350f;
+    public float spawnInterval = 0.6f;
 
     [Header("판정 창 (pixels)")]
     public float perfectWindowPx = 14f;
     public float greatWindowPx = 28f;
     public float goodWindowPx = 46f;
-    public float missWindowPx = 56f; // 지나침 허용치
+    public float missWindowPx = 56f;
 
     [Header("점수")]
     public int scorePerPerfect = 1000;
@@ -35,31 +34,24 @@ public class RhythmGameManager : MonoBehaviour
     public int scorePerGood = 400;
 
     [Header("초기 레인 패턴(테스트용)")]
-    public bool autoSpawn = true;       // 데모 패턴 자동생성
-    public bool alternateAD = true;     // A-D-A-D…
+    public bool autoSpawn = true;
 
-    // 내부 상태
+    [Header("게임 길이(초)")]
+    public float songLength = 10f;
+
     [HideInInspector] public float judgeX;
 
     private readonly List<RhythmNote> activeNotes = new();
     private Coroutine spawnCo;
     private bool playing = false;
 
-    private Lane nextLane = Lane.A;
-
-    // === 해머 결과 집계 ===
     private int failsCount = 0;
     private int perfectCount = 0;
     private bool finished = false;
-
-    // === 자동 종료용 ===
-    [Header("게임 길이(초)")]
-    public float songLength = 10f;   // 원하는 길이로 조절
     private float songStartTime = 0f;
 
     void Awake()
     {
-        // HitLine의 로컬 X를 자동으로 사용
         if (judgeZoneRect != null) judgeX = judgeZoneRect.anchoredPosition.x;
     }
 
@@ -67,6 +59,7 @@ public class RhythmGameManager : MonoBehaviour
     {
         if (autoSpawn) StartGame();
     }
+
     public void StartGame()
     {
         if (playing) return;
@@ -76,38 +69,11 @@ public class RhythmGameManager : MonoBehaviour
         perfectCount = 0;
         finished = false;
 
-        // 추가: 이전 결과 초기화
         HammerResultData.Clear();
-
         songStartTime = Time.time;
 
         if (spawnCo != null) StopCoroutine(spawnCo);
         spawnCo = StartCoroutine(SpawnRoutine());
-    }
-
-
-    public void StopGame()
-    {
-        playing = false;
-        if (spawnCo != null) StopCoroutine(spawnCo);
-    }
-
-    public void BeginWithCountdown(TextMeshProUGUI countdownText)
-    {
-        StartCoroutine(CoBegin(countdownText));
-    }
-
-    private IEnumerator CoBegin(TextMeshProUGUI t)
-    {
-        if (t)
-        {
-            t.gameObject.SetActive(true);
-            t.text = "3"; yield return new WaitForSeconds(1f);
-            t.text = "2"; yield return new WaitForSeconds(1f);
-            t.text = "1"; yield return new WaitForSeconds(1f);
-            t.gameObject.SetActive(false);
-        }
-        StartGame();
     }
 
     IEnumerator SpawnRoutine()
@@ -115,30 +81,26 @@ public class RhythmGameManager : MonoBehaviour
         System.Random rng = new System.Random();
         while (playing)
         {
-            // 곡 길이 초과 시 스폰 중단
             if (Time.time - songStartTime >= songLength)
             {
-                playing = false;        // 스폰 종료
+                playing = false;
                 spawnCo = null;
                 break;
             }
 
-            Lane lane = (rng.NextDouble() < 0.5) ? Lane.A : Lane.D;  // 50/50
+            Lane lane = (rng.NextDouble() < 0.5) ? Lane.A : Lane.D;
             SpawnNote(lane);
 
             float wait = Random.Range(0.2f, 0.5f);
             yield return new WaitForSeconds(wait);
         }
-        // 스폰이 멈춘 뒤, 모든 노트가 판정/소멸될 때까지 기다렸다 종료
         yield return new WaitUntil(() => activeNotes.Count == 0);
-        FinishGame();  // ← 결과 저장 & 씬 복귀
+        FinishGame();
     }
 
     void SpawnNote(Lane lane)
     {
         var n = Instantiate(notePrefab, playArea);
-
-        // 프리팹 찌그러짐 방지: 중앙 앵커/피벗/스케일 고정
         var r = n.GetComponent<RectTransform>();
         r.anchorMin = r.anchorMax = new Vector2(0.5f, 0.5f);
         r.pivot = new Vector2(0.5f, 0.5f);
@@ -149,28 +111,21 @@ public class RhythmGameManager : MonoBehaviour
         activeNotes.Add(n);
     }
 
-
     void Update()
     {
-        if (!playing && !finished) // 스폰은 멈췄지만 아직 게임이 끝난 건 아닐 수 있음
-        {
-            // 모든 노트가 처리되면 FinishGame은 SpawnRoutine에서 호출됨
-        }
-
         if (!playing && finished) return;
+
         if (playing)
         {
             if (Input.GetKeyDown(KeyCode.A)) TryHit(Lane.A);
             if (Input.GetKeyDown(KeyCode.D)) TryHit(Lane.D);
         }
 
-        // === (추가) Miss 판정: 판정선 지나 더 왼쪽으로 벗어나면 Miss ===
         for (int i = activeNotes.Count - 1; i >= 0; i--)
         {
             var n = activeNotes[i];
             if (n == null || n.hasJudged) { activeNotes.RemoveAt(i); continue; }
 
-            // 오른쪽→왼쪽으로 흐른다고 가정: hitLine보다 missWindowPx만큼 더 왼쪽이면 Miss
             if (n.rect.anchoredPosition.x < judgeX - missWindowPx)
             {
                 n.hasJudged = true;
@@ -179,6 +134,25 @@ public class RhythmGameManager : MonoBehaviour
                 activeNotes.RemoveAt(i);
             }
         }
+    }
+    public void BeginWithCountdown(TextMeshProUGUI countdownText) 
+    { 
+        StartCoroutine(CoBegin(countdownText)); 
+    }
+    private IEnumerator CoBegin(TextMeshProUGUI t) 
+    { 
+        if (t) 
+        { 
+            t.gameObject.SetActive(true); 
+            t.text = "3"; 
+            yield return new WaitForSeconds(1f); 
+            t.text = "2"; 
+            yield return new WaitForSeconds(1f); 
+            t.text = "1"; 
+            yield return new WaitForSeconds(1f); 
+            t.gameObject.SetActive(false);
+        } 
+        StartGame(); 
     }
 
     void TryHit(Lane lane)
@@ -191,22 +165,15 @@ public class RhythmGameManager : MonoBehaviour
             var n = activeNotes[i];
             if (n == null || n.hasJudged || n.lane != lane) continue;
             float dist = Mathf.Abs(n.rect.anchoredPosition.x - judgeX);
-            if (dist < bestDist)
-            {
-                bestDist = dist;
-                target = n;
-            }
+            if (dist < bestDist) { bestDist = dist; target = n; }
         }
-
         if (target == null) return;
-
-        // 히트 창 밖이면 입력 무시 (삭제 안함)
         if (bestDist > goodWindowPx) return;
 
         Judgement j =
             (bestDist <= perfectWindowPx) ? Judgement.Perfect :
             (bestDist <= greatWindowPx) ? Judgement.Great :
-                                            Judgement.Good;
+                                          Judgement.Good;
 
         target.hasJudged = true;
         OnJudge(target, j, false);
@@ -217,25 +184,14 @@ public class RhythmGameManager : MonoBehaviour
     {
         switch (j)
         {
-            case Judgement.Perfect:
-                perfectCount++;
-                ShowJudge("PERFECT", new Color32(255, 240, 120, 255));
-                break;
-            case Judgement.Great:
-                ShowJudge("GREAT", new Color32(160, 255, 160, 255));
-                break;
-            case Judgement.Good:
-                ShowJudge("GOOD", new Color32(160, 200, 255, 255));
-                break;
-            case Judgement.Miss:
-                failsCount++;
-                ShowJudge("MISS", new Color32(255, 120, 120, 255));
-                break;
+            case Judgement.Perfect: perfectCount++; ShowJudge("PERFECT", new Color32(255, 240, 120, 255)); break;
+            case Judgement.Great: ShowJudge("GREAT", new Color32(160, 255, 160, 255)); break;
+            case Judgement.Good: ShowJudge("GOOD", new Color32(160, 200, 255, 255)); break;
+            case Judgement.Miss: failsCount++; ShowJudge("MISS", new Color32(255, 120, 120, 255)); break;
         }
         activeNotes.Remove(note);
 
-        // TODO: hammerAnimator.SetTrigger("Hit");
-        // TODO: ingotController.Progress(j);
+        // TODO: hammer 애니/스파크 트리거 (판정별 강도 차이)
     }
 
     void ShowJudge(string s, Color c)
@@ -261,19 +217,7 @@ public class RhythmGameManager : MonoBehaviour
 
         HammerResultData.Save(failsCount, perfectCount);
 
-        // 2) 블로워와 동일하게 씬 복귀
-        StartCoroutine(EndMiniGameAfterDelay(1f));
+        //  완료 신호만 보내기 (복귀/전환은 상위 매니저가 처리)
+        MiniGameState.HammerDone = true;
     }
-
-    IEnumerator EndMiniGameAfterDelay(float delay)
-    {
-        yield return new WaitForSeconds(delay);
-
-        var camTrans = Camera.main != null ? Camera.main.GetComponent<CameraSceneTransition>() : null;
-        if (camTrans != null)
-            camTrans.StartZoomOut("Ingame_main");  // 메인으로 축소 복귀
-        else
-            SceneManager.LoadScene("Ingame_main"); // fallback
-    }
-
 }
