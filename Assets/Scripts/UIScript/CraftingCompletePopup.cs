@@ -7,7 +7,7 @@ public class CraftingCompletePopup : MonoBehaviour
     [Header("UI Reference")]
     public Image icon;
     public TMP_Text nameText;
-    public TMP_Text qualityText;      // "품질 : ★★★☆☆" 같은 텍스트
+    public TMP_Text qualityText;      // 품질
     public Button closeBtn;
 
     private System.Action _onClose;

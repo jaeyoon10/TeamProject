@@ -27,6 +27,13 @@ public class WeaponCraftingManager : MonoBehaviour
     public string anvilSceneName = "MiniGameHammer";
     public string grindingSceneName = "MiniGameGrinding";
 
+    [Header("Quality Weights")]
+    public int baseQuality = 0;
+    public int wPerfect = +10;
+    public int wGreat = +7;
+    public int wGood = +5;
+    public int wMiss = -10;
+
 
     [System.Serializable]
     public class MiniSceneBinding
@@ -35,6 +42,8 @@ public class WeaponCraftingManager : MonoBehaviour
         public Camera cam;       // 미니게임 전용 카메라
         public Canvas ui;        // 미니게임 UI(Canvas)
     }
+
+    private GradeCounts _totalCounts;
 
     private Queue<IEnumerator> craftingSteps;
     private int qualityScore;
@@ -66,6 +75,9 @@ public class WeaponCraftingManager : MonoBehaviour
 
     public void StartCrafting(RecipeData recipe)
     {
+        _totalCounts = default;     //  합산 카운트 초기화
+        qualityScore = baseQuality; //  시작점은 baseQuality
+
         var info = FindObjectOfType<CharacterInfoManager>(); 
         if (info == null) 
             Debug.LogError("CharacterInfoManager가 없습니다!"); 
@@ -98,27 +110,44 @@ public class WeaponCraftingManager : MonoBehaviour
                 Debug.LogError("[Crafting] CraftingCompletePopup을 찾을 수 없습니다!"); 
         }
 
-        qualityScore = 100;
-
         // 🔹 제작 단계 등록
         craftingSteps = new Queue<IEnumerator>();
         craftingSteps.Enqueue(HandleHeatStep(recipe));
         craftingSteps.Enqueue(HandleHammerStep());
-        craftingSteps.Enqueue(HandleGrindingStep()); //Grinding 나중에 추가될 예정
+        craftingSteps.Enqueue(HandleGrindingStep()); 
 
         StartCoroutine(ProcessCrafting(recipe));
     }
 
-    IEnumerator ProcessCrafting(RecipeData recipe)
+
+    int CalcQualityFromCounts(GradeCounts c)
     {
+        int q = baseQuality
+              + c.perfect * wPerfect
+              + c.great * wGreat
+              + c.good * wGood
+              + c.miss * wMiss;
+        Debug.Log($"[Craft] P:{c.perfect * wPerfect} G:{c.great * wGreat} D:{c.good * wGood} M:{c.miss * wMiss} RawScore={q}");
+        return Mathf.Clamp(q, 0, 100);
+    }
+
+    IEnumerator ProcessCrafting(RecipeData recipe)
+        {
+
         while (craftingSteps.Count > 0)
             yield return StartCoroutine(craftingSteps.Dequeue());
 
         yield return new WaitForSeconds(0.2f);
+        qualityScore = CalcQualityFromCounts(_totalCounts);
+        Debug.Log($"[Craft] FINAL qualityScore={qualityScore}");
+        qualityScore = Mathf.Clamp(qualityScore, 0, 100);
 
         int star = CalcStar(qualityScore);
+        Debug.Log($"[Craft] FINAL stars={star}");
+
         yield return StartCoroutine(OnCraftingComplete(recipe, qualityScore, star));
-    }
+
+        }
 
     // ================== Heat (Furnace) ==================
     IEnumerator HandleHeatStep(RecipeData recipe)
@@ -181,14 +210,16 @@ public class WeaponCraftingManager : MonoBehaviour
         camSwap.ExitMiniGame(bind.cam, bind.root, bind.ui);
         yield return SceneManager.UnloadSceneAsync(anvilSceneName);
 
-        // 품질 반영
         if (HammerResultData.hasValue)
         {
             var r = HammerResultData.Consume();
-            if (r.fails == 1) qualityScore -= 10;
-            else if (r.fails == 2) qualityScore -= 20;
-            else if (r.fails >= 3) qualityScore -= 35;
-            qualityScore += r.perfect * 5;
+            _totalCounts.perfect += r.perfect;
+            _totalCounts.great += r.great;
+            _totalCounts.good += r.good;
+            _totalCounts.miss += r.miss;
+
+            Debug.Log($"[Craft] SUM(Hammer) => P:{_totalCounts.perfect} G:{_totalCounts.great} D:{_totalCounts.good} M:{_totalCounts.miss}");
+
         }
     }
 
@@ -229,6 +260,16 @@ public class WeaponCraftingManager : MonoBehaviour
         // 5) 씬 언로드
         yield return SceneManager.UnloadSceneAsync(grindingSceneName);
 
+        if (GrindingResultData.hasValue)
+        {
+            var r = GrindingResultData.Consume();
+            _totalCounts.perfect += r.perfect;
+            _totalCounts.great += r.great;
+            _totalCounts.good += r.good;
+            _totalCounts.miss += r.miss;
+
+            Debug.Log($"[Craft] SUM(Grinding) => P:{_totalCounts.perfect} G:{_totalCounts.great} D:{_totalCounts.good} M:{_totalCounts.miss}");
+        }
     }
 
 

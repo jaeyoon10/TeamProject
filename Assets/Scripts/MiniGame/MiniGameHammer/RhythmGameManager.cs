@@ -50,6 +50,9 @@ public class RhythmGameManager : MonoBehaviour
     private bool finished = false;
     private float songStartTime = 0f;
 
+
+    int _cntPerfect, _cntGreat, _cntGood, _cntMiss;
+
     void Awake()
     {
         if (judgeZoneRect != null) judgeX = judgeZoneRect.anchoredPosition.x;
@@ -184,10 +187,23 @@ public class RhythmGameManager : MonoBehaviour
     {
         switch (j)
         {
-            case Judgement.Perfect: perfectCount++; ShowJudge("PERFECT", new Color32(255, 240, 120, 255)); break;
-            case Judgement.Great: ShowJudge("GREAT", new Color32(160, 255, 160, 255)); break;
-            case Judgement.Good: ShowJudge("GOOD", new Color32(160, 200, 255, 255)); break;
-            case Judgement.Miss: failsCount++; ShowJudge("MISS", new Color32(255, 120, 120, 255)); break;
+            case Judgement.Perfect: 
+                _cntPerfect++; 
+                ShowJudge("PERFECT", new Color32(255, 240, 120, 255)); 
+                break;
+
+            case Judgement.Great:
+                _cntGreat++;
+                ShowJudge("GREAT", new Color32(160, 255, 160, 255)); 
+                break;
+            case Judgement.Good:
+                _cntGood++;
+                ShowJudge("GOOD", new Color32(160, 200, 255, 255)); 
+                break;
+            case Judgement.Miss: 
+                _cntMiss++; 
+                ShowJudge("MISS", new Color32(255, 120, 120, 255)); 
+                break;
         }
         activeNotes.Remove(note);
 
@@ -215,8 +231,9 @@ public class RhythmGameManager : MonoBehaviour
         if (finished) return;
         finished = true;
 
-        HammerResultData.Save(failsCount, perfectCount);
+        Debug.Log($"[Hammer Finish] P:{_cntPerfect} G:{_cntGreat} D:{_cntGood} M:{_cntMiss}");
 
+        HammerResultData.Save(_cntPerfect, _cntGreat, _cntGood, _cntMiss);
         //  완료 신호만 보내기 (복귀/전환은 상위 매니저가 처리)
         MiniGameState.HammerDone = true;
     }

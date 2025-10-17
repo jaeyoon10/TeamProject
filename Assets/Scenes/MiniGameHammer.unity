@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.44657898, g: 0.4964133, b: 0.5748178, a: 1}
+  m_IndirectSpecularColor: {r: 0.44657826, g: 0.49641263, b: 0.57481676, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -352,7 +352,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   renderers: []
-  glowColor: {r: 0.14509805, g: 0.12156863, b: 0.03137255, a: 1}
+  glowColor: {r: 0.13333334, g: 0.039215688, b: 0.05490196, a: 1}
   minIntensity: 0
   maxIntensity: 2
   speed: 2
@@ -752,9 +752,8 @@ MonoBehaviour:
   scorePerGreat: 700
   scorePerGood: 400
   autoSpawn: 0
-  alternateAD: 0
-  judgeX: 0
   songLength: 10
+  judgeX: 0
 --- !u!1 &751654384
 GameObject:
   m_ObjectHideFlags: 0

@@ -34,6 +34,15 @@ public class GrindingWipeSimple : MonoBehaviour, IPointerDownHandler, IPointerUp
     [Range(0f, 1f)] public float clearThreshold = 0.85f;
     public int roundsToPlay = 2;
 
+
+    [Header("Inter-round Pause")]
+    public float interRoundPause = 2f;  //라운드 사이 대기 시간
+    public event System.Action<int, float> OnInterRoundPause;
+
+    [Header("3D Grinder Animation")]
+    public Animator grinderAnimator;   // 오른쪽 3D 오브젝트의 애니메이터
+    public string grinderTrigger = "Sharpen"; // 애니메이션 트리거 이름
+
     bool _pressing;
     Camera _uiCam;
     List<StainBlob> _stains = new List<StainBlob>();
@@ -42,6 +51,7 @@ public class GrindingWipeSimple : MonoBehaviour, IPointerDownHandler, IPointerUp
     float _roundStartTime;
     float _cleared01;
 
+    int _cntPerfect, _cntGreat, _cntGood, _cntMiss;
     void Awake()
     {
         if (brushCursor) brushCursor.gameObject.SetActive(false);
@@ -141,10 +151,23 @@ public class GrindingWipeSimple : MonoBehaviour, IPointerDownHandler, IPointerUp
                 string grade = CalcGrade(elapsed);
                 if (gradeText) gradeText.text = grade;
 
+                switch (grade)
+                {
+                    case "PERFECT": _cntPerfect++; break;
+                    case "GREAT":   _cntGreat++; break;
+                    case "GOOD":    _cntGood++; break;
+                    default:        _cntMiss++; break;
+                }
+
                 _currentRound++;
+
                 if (_currentRound < roundsToPlay)
                 {
-                    yield return new WaitForSeconds(1f);
+                    if (grinderAnimator != null)
+                        grinderAnimator.SetTrigger(grinderTrigger);
+
+                    yield return new WaitForSeconds(2f);
+
                     StartRound();
                 }
                 else
@@ -161,18 +184,24 @@ public class GrindingWipeSimple : MonoBehaviour, IPointerDownHandler, IPointerUp
 
     string CalcGrade(float t)
     {
-        if (t <= 6f) return "PERFECT!";
-        else if (t <= 7f) return "GREAT!";
-        else if (t <= 9f) return "GOOD";
+        if (t <= 7f) return "PERFECT";
+        else if (t <= 8f) return "GREAT";
+        else if (t <= 10f) return "GOOD";
         else return "MISS";
     }
 
+
     void FinishGame()
     {
+
         if (_finished) return;
         _finished = true;
+        //2라운드 합계 저장
+        GrindingResultData.Save(_cntPerfect, _cntGreat, _cntGood, _cntMiss);
         MiniGameState.GrindingDone = true;
         if (progressText) progressText.text = "Complete!";
+
+
     }
 
     // ========== 스폰 (아이템 알파 내부) ==========

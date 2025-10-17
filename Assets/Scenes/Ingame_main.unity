@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.60859674, g: 0.7550854, b: 0.8365434, a: 1}
+  m_IndirectSpecularColor: {r: 0.60859656, g: 0.75508523, b: 0.8365426, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -10248,12 +10248,18 @@ MonoBehaviour:
   moveSpeed: 2
   heatPosition: {fileID: 1652723034}
   hammerPosition: {fileID: 476345209}
-  polishPosition: {fileID: 2051029261}
+  grindingPosition: {fileID: 2051029261}
   doorPosition: {fileID: 1835682799}
   completePopup: {fileID: 0}
   camSwap: {fileID: 245282003}
   furnaceSceneName: MiniGameBrasier
   anvilSceneName: MiniGameHammer
+  grindingSceneName: MiniGameGrinding
+  baseQuality: 0
+  wPerfect: 10
+  wGreat: 7
+  wGood: 5
+  wMiss: -3
 --- !u!4 &1023171014
 Transform:
   m_ObjectHideFlags: 0
