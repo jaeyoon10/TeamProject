@@ -12,7 +12,12 @@ public class DialogUIManager : MonoBehaviour
     public GameObject dialogPanel;
     public Image icon;
     public TMP_Text dialogText;
+    public TMP_Text OKText;
 
+
+    public float bounceHeight = 14f;  // 위아래 이동 높이
+    public float bounceSpeed = 2f;    // 이동 속도
+    private Vector3 okOriginalPos;
     private bool isShowing = false;
 
     void Awake()
@@ -26,22 +31,31 @@ public class DialogUIManager : MonoBehaviour
             dialogPanel.SetActive(false);
     }
 
+    private void Start()
+    {
+        okOriginalPos = OKText.rectTransform.anchoredPosition;
+    }
+
     private void Update()
     {
         if (!isShowing) return;
 
-        if (Input.GetKeyDown(KeyCode.G) || Input.GetMouseButtonDown(0))
+        if (Input.GetKeyDown(KeyCode.G))
         {
             HideDialog();
         }
+
+        float offsetY = Mathf.Sin(Time.time * bounceSpeed) * bounceHeight;
+        OKText.rectTransform.anchoredPosition = okOriginalPos + new Vector3(0, offsetY);
     }
     public void ShowDialog(RecipeData recipe)
     {
         if (recipe == null) return;
-
-        dialogPanel.SetActive(true);
+            dialogPanel.SetActive(true);
         icon.sprite = recipe.icon;
         dialogText.text = $"[손님] {recipe.weaponName}을(를) 제작해 주세요!";
+
+        OKText.text = $"G 키를 눌러 나가기";
 
         isShowing = true;
     }
@@ -52,5 +66,8 @@ public class DialogUIManager : MonoBehaviour
             dialogPanel.SetActive(false);
 
         isShowing = false;
+
+        // 위치 원상 복구
+        OKText.rectTransform.anchoredPosition = okOriginalPos;
     }
 }

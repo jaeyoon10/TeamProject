@@ -15,9 +15,12 @@ public class CustomerController : MonoBehaviour
     private RecipeData demandRecipe;
     private bool isServed = false;
 
+    private bool isPaused;
     public bool IsServed => isServed;
-    // ← 여기를 추가
-    /// <summary>현재 이 손님이 요구 중인 레시피</summary>
+
+    /// <summary>
+    /// 현재 이 손님이 요구 중인 레시피
+    /// </summary>
     public RecipeData DemandRecipe => demandRecipe;
 
     /// <summary>
@@ -34,10 +37,22 @@ public class CustomerController : MonoBehaviour
 
     IEnumerator WalkToDoor()
     {
+
+        if (ModalController.IsOpen)
+            yield return new WaitUntil(() => !ModalController.IsOpen);
+
         transform.LookAt(targetDoor.position);
 
         while (Vector3.Distance(transform.position, targetDoor.position) > 0.1f)
         {
+            //모달 열리면 즉시 멈추고, 닫힐 때까지 대기 후 재개
+            if (ModalController.IsOpen)
+            {
+                animator.SetBool("isMoving", false);
+                yield return new WaitUntil(() => !ModalController.IsOpen);
+                animator.SetBool("isMoving", true);
+            }
+
             transform.position = Vector3.MoveTowards(
                 transform.position,
                 targetDoor.position,
@@ -163,8 +178,27 @@ public class CustomerController : MonoBehaviour
         return result;
     }
 
+    private void OnEnable()
+    {
+        ModalController.OnChanged += HandleModal;
+    }
+
+    private void OnDisable()
+    {
+        ModalController.OnChanged -= HandleModal;
+    }
+
+    private void HandleModal(bool open)
+    {
+        isPaused = open;
+        animator.SetBool("isMoving", !isPaused);
+    }
+
     IEnumerator Depart()
     {
+        if (ModalController.IsOpen)
+            yield return new WaitUntil(() => !ModalController.IsOpen);
+
         // 잠시 대기
         yield return new WaitForSeconds(1f);
 
@@ -174,6 +208,13 @@ public class CustomerController : MonoBehaviour
         animator.SetBool("isMoving", true);
         while (Vector3.Distance(transform.position, exitPoint.position) > 0.1f)
         {
+            // 팝업이 열려있으면 그동안 멈춤
+            if (isPaused)
+            {
+                yield return null; // 다음 프레임까지 대기
+                continue;
+            }
+
             transform.position = Vector3.MoveTowards(
                 transform.position,
                 exitPoint.position,

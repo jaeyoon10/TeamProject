@@ -37,8 +37,11 @@ public class LevelUpUI : MonoBehaviour
 
     public void ShowLevelUp(int level)
     {
+
         gameObject.SetActive(true);
         StartCoroutine(PlayAnimation(level));
+
+        ModalController.Show();
     }
 
     private IEnumerator PlayAnimation(int level)
@@ -138,9 +141,6 @@ public class LevelUpUI : MonoBehaviour
         gameObject.SetActive(false);
         Debug.Log("[LevelUpUI] È®ÀÎ ¹öÆ° Å¬¸¯ ¡æ Ã¢ ´ÝÈû");
 
-        if (CraftingUI.Instance != null)
-        {
-            CraftingUI.Instance.ShowList();
-        }
+        ModalController.Hide();
     }
 }

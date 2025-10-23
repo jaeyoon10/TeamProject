@@ -28,7 +28,7 @@ public class Arrow : MonoBehaviour
         Vector3 screenPos = mainCam.WorldToScreenPoint(target.position);
 
         // 2) 화면 좌표를 UI에 적용
-        arrowUI.position = screenPos + new Vector3(0, 100, 0); // 오프셋 (위쪽에 표시)
+        arrowUI.position = screenPos + new Vector3(-100, 100, 0); // 오프셋 (위쪽에 표시)
 
         // 3) 위아래로 흔들리기 (Sin 함수 이용)
         float offsetY = Mathf.Sin(Time.time * bounceSpeed) * bounceHeight;

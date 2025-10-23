@@ -9,7 +9,7 @@ public class Blower : MonoBehaviour
     public Slider heatGauge;
     public float decreaseSpeed = 0.1f;
     public float increaseAmount = 0.5f;
-    public float cooldownTime = 1f;
+    public float cooldownTime = 0.5f;
 
     [Header("Ç®¹«")]
     public GameObject bellows;

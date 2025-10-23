@@ -95,6 +95,8 @@ public class DaySummaryManager : MonoBehaviour
         // 3) DaySummaryPanel을 활성화하여 화면에 보이게 함
         if (daySummaryPanel != null)
             daySummaryPanel.SetActive(true);
+
+        ModalController.Show();
     }
 
     /// <summary>
@@ -152,6 +154,8 @@ public class DaySummaryManager : MonoBehaviour
         {
             Debug.LogWarning("[DaySummaryManager] storeSlotLoader가 할당되지 않았습니다!");
         };
+
+        ModalController.Hide();
     }
 
     /// <summary>

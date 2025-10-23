@@ -89,4 +89,4 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   hp: 1
-  eraseSpeed: 1.5
+  eraseSpeed: 3

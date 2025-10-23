@@ -31,11 +31,6 @@ public class CustomerSpawner : MonoBehaviour
         if (doorgo != null) targetDoor = doorgo.transform;
         else Debug.LogError("CustomerDoorObject 씬에 없습니다!");
 
-        if (!customerPrefab) Debug.LogError("[CustomerSpawner] customerPrefab 미지정!");
-        if (!spawnPoint) Debug.LogError("[CustomerSpawner] spawnPoint 미지정!");
-        if (!craftingUI) Debug.LogError("[CustomerSpawner] craftingUI 미지정!");
-        if (!exitPoint) Debug.LogError("[CustomerSpawner] exitPoint 미지정!");
-        if (!targetDoor) Debug.LogError("[CustomerSpawner] targetDoor 미지정!");
 
         IsReady = (customerPrefab && spawnPoint && craftingUI && exitPoint && targetDoor);
     }

@@ -118,7 +118,7 @@ public class RhythmGameManager : MonoBehaviour
     {
         if (!playing && finished) return;
 
-        if (playing)
+        if (!finished)
         {
             if (Input.GetKeyDown(KeyCode.A)) TryHit(Lane.A);
             if (Input.GetKeyDown(KeyCode.D)) TryHit(Lane.D);
