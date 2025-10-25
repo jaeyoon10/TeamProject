@@ -39,6 +39,11 @@ public class RhythmGameManager : MonoBehaviour
     [Header("게임 길이(초)")]
     public float songLength = 10f;
 
+    [Header("사운드")]
+    public AudioSource sfxSource;
+    public AudioClip hammerSound;
+    private int hammerHitCounter = 0;
+
     [HideInInspector] public float judgeX;
 
     private readonly List<RhythmNote> activeNotes = new();
@@ -185,6 +190,10 @@ public class RhythmGameManager : MonoBehaviour
 
     public void OnJudge(RhythmNote note, Judgement j, bool auto)
     {
+        hammerHitCounter++;
+        if (hammerHitCounter % 5 == 0 && sfxSource && hammerSound)
+            sfxSource.PlayOneShot(hammerSound);
+
         switch (j)
         {
             case Judgement.Perfect: 

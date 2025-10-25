@@ -17,6 +17,23 @@ public class Blower : MonoBehaviour
     private Color originalColor;
     private float lastClickTime;
 
+    [Header("Audio")]
+    public AudioSource sfxSource;
+    public AudioSource fireLoopSource;
+
+    public AudioClip bellowsSound;
+    public AudioClip fireSound;
+
+    [Range(0f, 1f)] public float bellowsVolume = 1.0f;
+    [Range(0f, 1f)] public float fireVolumeMax = 0.6f;
+    [Range(0.5f, 1.2f)] public float bellowsPitchJitter = 0.08f;
+
+    public float fireStartThreshold = 0.5f;
+
+    public float fireStopThreshold = 0.45f;
+
+    private bool fireLoopStarted = false;
+
     [Header("숯 (eggs_basket 오브젝트들)")]
     public GameObject[] coalParents;
     private List<Renderer> coals = new List<Renderer>();
@@ -27,6 +44,7 @@ public class Blower : MonoBehaviour
 
     private Gradient heatGradient;
     private bool gameCompleted = false;
+
 
     void Start()
     {
@@ -70,6 +88,18 @@ public class Blower : MonoBehaviour
             },
             new GradientAlphaKey[] { new GradientAlphaKey(1f, 0f), new GradientAlphaKey(1f, 1f) }
         );
+        if (bellowsSound == null) bellowsSound = Resources.Load<AudioClip>("bellows-sound");
+        if (fireSound == null) fireSound = Resources.Load<AudioClip>("fire-sound");
+
+        if (fireSound != null)
+        {
+            if (fireLoopSource.clip == null && fireSound != null) 
+                fireLoopSource.clip = fireSound;
+
+            fireLoopSource.loop = true;
+            fireLoopSource.playOnAwake = false;
+            fireLoopSource.volume = 0f;
+        }
     }
 
     void Update()
@@ -101,6 +131,33 @@ public class Blower : MonoBehaviour
             {
                 var emiss = Color.Lerp(Color.black, new Color(1f, 0.2f, 0.2f), t);
                 ingot.material.SetColor("_EmissionColor", emiss * Mathf.LinearToGammaSpace(t * 1.5f));
+            }
+        }
+
+        if (fireLoopSource != null)
+        {
+            // 시작 조건: 50% 이상 & 아직 시작 안함
+            if (!fireLoopStarted && t >= fireStartThreshold && fireSound != null)
+            {
+                if (fireLoopSource.clip == null) fireLoopSource.clip = fireSound;
+                fireLoopSource.volume = 0f;
+                fireLoopSource.Play();
+                fireLoopStarted = true;
+            }
+            // 정지 조건: 45% 미만으로 떨어지면 멈춤
+            if (fireLoopStarted && t < fireStopThreshold)
+            {
+                fireLoopSource.Stop();
+                fireLoopStarted = false;
+            }
+
+            //  게이지에 따라 볼륨 살짝 올려주기
+            if (fireLoopStarted && fireLoopSource.isPlaying)
+            {
+                // 0.5~1.0 -> 0~1로 리매핑
+                float fireT = Mathf.InverseLerp(fireStartThreshold, 1f, t);
+                float targetVol = Mathf.Lerp(0.15f, fireVolumeMax, fireT);
+                fireLoopSource.volume = Mathf.MoveTowards(fireLoopSource.volume, targetVol, Time.deltaTime * 1.5f);
             }
         }
 
@@ -159,5 +216,12 @@ public class Blower : MonoBehaviour
 
         if (heatGauge)
             heatGauge.value = Mathf.Min(heatGauge.maxValue, heatGauge.value + increaseAmount);
+
+        if (sfxSource != null && bellowsSound != null)
+        {
+            sfxSource.pitch = 1f + Random.Range(-bellowsPitchJitter, bellowsPitchJitter);
+            sfxSource.PlayOneShot(bellowsSound, bellowsVolume);
+        }
     }
+
 }
