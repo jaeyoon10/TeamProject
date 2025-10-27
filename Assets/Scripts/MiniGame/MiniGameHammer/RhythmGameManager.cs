@@ -39,28 +39,41 @@ public class RhythmGameManager : MonoBehaviour
     [Header("게임 길이(초)")]
     public float songLength = 10f;
 
-    [Header("사운드")]
-    public AudioSource sfxSource;
-    public AudioClip hammerSound;
-    private int hammerHitCounter = 0;
+    [Header("이펙트 사운드")]
+    public AudioClip PerfectSound; // 퍼팩트
+    public AudioClip GreatSound;   // 그레이트
+    public AudioClip GoodSound;    // 굿
+    public AudioClip MissSound;    // 미스
+    [Range(0f, 1f)] public float sfxVolume = 0.5f;
 
     [HideInInspector] public float judgeX;
+
+    // 내부 오디오 전용(2D) 소스
+    private AudioSource _sfx;
 
     private readonly List<RhythmNote> activeNotes = new();
     private Coroutine spawnCo;
     private bool playing = false;
 
-    private int failsCount = 0;
     private int perfectCount = 0;
     private bool finished = false;
     private float songStartTime = 0f;
-
 
     int _cntPerfect, _cntGreat, _cntGood, _cntMiss;
 
     void Awake()
     {
         if (judgeZoneRect != null) judgeX = judgeZoneRect.anchoredPosition.x;
+
+        // 2D 전용 오디오소스 스크립트로 생성/세팅
+        _sfx = gameObject.GetComponent<AudioSource>();
+        if (_sfx == null) _sfx = gameObject.AddComponent<AudioSource>();
+        _sfx.playOnAwake = false;
+        _sfx.spatialBlend = 0f;   // 2D
+        _sfx.dopplerLevel = 0f;
+        _sfx.rolloffMode = AudioRolloffMode.Linear; // 2D라도 명시
+        _sfx.bypassReverbZones = true;
+        _sfx.volume = 1f; // 최종 볼륨은 PlayOneShot의 매개변수(sfxVolume)로 조절
     }
 
     void Start()
@@ -73,7 +86,6 @@ public class RhythmGameManager : MonoBehaviour
         if (playing) return;
         playing = true;
 
-        failsCount = 0;
         perfectCount = 0;
         finished = false;
 
@@ -123,7 +135,7 @@ public class RhythmGameManager : MonoBehaviour
     {
         if (!playing && finished) return;
 
-        if (!finished)
+        if (playing)
         {
             if (Input.GetKeyDown(KeyCode.A)) TryHit(Lane.A);
             if (Input.GetKeyDown(KeyCode.D)) TryHit(Lane.D);
@@ -143,24 +155,26 @@ public class RhythmGameManager : MonoBehaviour
             }
         }
     }
-    public void BeginWithCountdown(TextMeshProUGUI countdownText) 
-    { 
-        StartCoroutine(CoBegin(countdownText)); 
+
+    public void BeginWithCountdown(TextMeshProUGUI countdownText)
+    {
+        StartCoroutine(CoBegin(countdownText));
     }
-    private IEnumerator CoBegin(TextMeshProUGUI t) 
-    { 
-        if (t) 
-        { 
-            t.gameObject.SetActive(true); 
-            t.text = "3"; 
-            yield return new WaitForSeconds(1f); 
-            t.text = "2"; 
-            yield return new WaitForSeconds(1f); 
-            t.text = "1"; 
-            yield return new WaitForSeconds(1f); 
+
+    private IEnumerator CoBegin(TextMeshProUGUI t)
+    {
+        if (t)
+        {
+            t.gameObject.SetActive(true);
+            t.text = "3";
+            yield return new WaitForSeconds(1f);
+            t.text = "2";
+            yield return new WaitForSeconds(1f);
+            t.text = "1";
+            yield return new WaitForSeconds(1f);
             t.gameObject.SetActive(false);
-        } 
-        StartGame(); 
+        }
+        StartGame();
     }
 
     void TryHit(Lane lane)
@@ -190,33 +204,43 @@ public class RhythmGameManager : MonoBehaviour
 
     public void OnJudge(RhythmNote note, Judgement j, bool auto)
     {
-        hammerHitCounter++;
-        if (hammerHitCounter % 5 == 0 && sfxSource && hammerSound)
-            sfxSource.PlayOneShot(hammerSound);
-
         switch (j)
         {
-            case Judgement.Perfect: 
-                _cntPerfect++; 
-                ShowJudge("PERFECT", new Color32(255, 240, 120, 255)); 
+            case Judgement.Perfect:
+                _cntPerfect++;
+                ShowJudge("PERFECT", new Color32(255, 240, 120, 255));
+                PlaySfx(PerfectSound, sfxVolume);
                 break;
 
             case Judgement.Great:
                 _cntGreat++;
-                ShowJudge("GREAT", new Color32(160, 255, 160, 255)); 
+                ShowJudge("GREAT", new Color32(160, 255, 160, 255));
+                PlaySfx(GreatSound, sfxVolume);
                 break;
+
             case Judgement.Good:
                 _cntGood++;
-                ShowJudge("GOOD", new Color32(160, 200, 255, 255)); 
+                ShowJudge("GOOD", new Color32(160, 200, 255, 255));
+                PlaySfx(GoodSound, sfxVolume);
                 break;
-            case Judgement.Miss: 
-                _cntMiss++; 
-                ShowJudge("MISS", new Color32(255, 120, 120, 255)); 
+
+            case Judgement.Miss:
+                _cntMiss++;
+                ShowJudge("MISS", new Color32(255, 120, 120, 255));
+                PlaySfx(MissSound, sfxVolume);
                 break;
         }
         activeNotes.Remove(note);
 
         // TODO: hammer 애니/스파크 트리거 (판정별 강도 차이)
+    }
+
+    // -------- 오디오 유틸(전부 스크립트로) --------
+    void PlaySfx(AudioClip clip, float vol = 1f)
+    {
+        if (clip == null) return;
+        if (_sfx == null) return; // 방어적
+        _sfx.PlayOneShot(clip, Mathf.Clamp01(vol));
     }
 
     void ShowJudge(string s, Color c)
@@ -232,7 +256,13 @@ public class RhythmGameManager : MonoBehaviour
     {
         var col = judgeText.color; col.a = 1f; judgeText.color = col;
         float t = 0f, dur = 0.4f;
-        while (t < dur) { t += Time.deltaTime; col.a = Mathf.Lerp(1f, 0f, t / dur); judgeText.color = col; yield return null; }
+        while (t < dur)
+        {
+            t += Time.deltaTime;
+            col.a = Mathf.Lerp(1f, 0f, t / dur);
+            judgeText.color = col;
+            yield return null;
+        }
     }
 
     void FinishGame()
@@ -243,7 +273,6 @@ public class RhythmGameManager : MonoBehaviour
         Debug.Log($"[Hammer Finish] P:{_cntPerfect} G:{_cntGreat} D:{_cntGood} M:{_cntMiss}");
 
         HammerResultData.Save(_cntPerfect, _cntGreat, _cntGood, _cntMiss);
-        //  완료 신호만 보내기 (복귀/전환은 상위 매니저가 처리)
         MiniGameState.HammerDone = true;
     }
 }

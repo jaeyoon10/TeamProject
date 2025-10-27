@@ -1036,8 +1036,8 @@ MonoBehaviour:
   bellows: {fileID: 1522249729}
   sfxSource: {fileID: 887196557}
   fireLoopSource: {fileID: 1358733127}
-  bellowsSound: {fileID: 8300000, guid: ca503ff564c24e245894d992142d97c9, type: 3}
-  fireSound: {fileID: 8300000, guid: 732f64881e227ab429ce991e66ec16ac, type: 3}
+  bellowsSound: {fileID: 8300000, guid: f0313cbf9e2b44a5b9b13517caacca51, type: 3}
+  fireSound: {fileID: 8300000, guid: b6a5200ac0b1b4f9e938b98edb6282df, type: 3}
   bellowsVolume: 1
   fireVolumeMax: 0.6
   bellowsPitchJitter: 0.08
