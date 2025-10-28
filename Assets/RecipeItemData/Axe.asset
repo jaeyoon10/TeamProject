@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Axe
   m_EditorClassIdentifier: 
   weaponName: "\uB3C4\uB07C"
-  icon: {fileID: 6674386295937086461, guid: 7abd59d488ec3484089d5f418816dbdb, type: 3}
+  icon: {fileID: 21300000, guid: a909f5c6192d1dd489f935defc3b67b7, type: 3}
   baseXP: 0
   requiredLevel: 2
   xpReward: 40

@@ -3,7 +3,15 @@ guid: 2847dfabded268840a8445624f4122bc
 MonoImporter:
   externalObjects: {}
   serializedVersion: 2
-  defaultReferences: []
+  defaultReferences:
+  - iconImage: {instanceID: 0}
+  - nameText: {instanceID: 0}
+  - priceText: {instanceID: 0}
+  - amountText: {instanceID: 0}
+  - purchaseButton: {instanceID: 0}
+  - backgroundImage: {instanceID: 0}
+  - purchaseSound: {fileID: 8300000, guid: 7deb844c65408e24b8014b11b5b6d7ab, type: 3}
+  - characterInfoManager: {instanceID: 0}
   executionOrder: 0
   icon: {instanceID: 0}
   userData: 

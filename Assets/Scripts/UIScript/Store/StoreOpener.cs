@@ -9,26 +9,46 @@ public class StoreOpener : MonoBehaviour
     public GameObject storePanel;    // StorePanel(GameObject)
     public Button storeCloseButton;  // “X” 버튼
 
+    [Header("사운드")]
+    public AudioClip openSound;
+    public AudioClip closeSound;
+    [Range(0f, 1f)]
+    public float volume = 1f;
+
+    private AudioSource _audio;
+
+    void Awake()
+    {
+        // AudioSource 자동 생성
+        _audio = gameObject.AddComponent<AudioSource>();
+        _audio.playOnAwake = false;
+        _audio.spatialBlend = 0f; // 2D 사운드
+    }
+
     void Start()
     {
-        // 시작할 때 StorePanel을 꺼 두고,
         if (storePanel.activeSelf)
             storePanel.SetActive(false);
 
-        // 열기 버튼 누르면 ShowStorePanel() 호출
         storeOpenButton.onClick.AddListener(ShowStorePanel);
-
-        // 닫기 버튼 누르면 CloseStorePanel() 호출
         storeCloseButton.onClick.AddListener(CloseStorePanel);
     }
 
     void ShowStorePanel()
     {
         storePanel.SetActive(true);
+        PlaySFX(openSound);
     }
 
     void CloseStorePanel()
     {
         storePanel.SetActive(false);
+        PlaySFX(closeSound);
+    }
+
+    void PlaySFX(AudioClip clip)
+    {
+        if (clip != null)
+            _audio.PlayOneShot(clip, volume);
     }
 }

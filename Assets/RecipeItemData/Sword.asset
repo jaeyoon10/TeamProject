@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: Sword
   m_EditorClassIdentifier: 
   weaponName: "\uCE7C"
-  icon: {fileID: 712035800519618848, guid: 5555116c8467a454c8c90c5cece8dc84, type: 3}
+  icon: {fileID: 21300000, guid: c24e9cd81c9cefb4b95cf9b6c6c550a8, type: 3}
   baseXP: 0
   requiredLevel: 1
   xpReward: 40

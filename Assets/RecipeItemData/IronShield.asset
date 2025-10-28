@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: IronShield
   m_EditorClassIdentifier: 
   weaponName: "\uCCA0 \uBC29\uD328"
-  icon: {fileID: -7314038943984137149, guid: 888bc6c3bee4a644894eb075d8d389f5, type: 3}
+  icon: {fileID: 21300000, guid: e996ac0f75699aa43b13a41db830c54f, type: 3}
   baseXP: 0
   requiredLevel: 2
   xpReward: 50
