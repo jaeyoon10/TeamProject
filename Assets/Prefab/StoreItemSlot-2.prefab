@@ -804,9 +804,12 @@ MonoBehaviour:
   amountText: {fileID: 8529428465165611935}
   purchaseButton: {fileID: 2161356641769979796}
   backgroundImage: {fileID: 3759291952191288551}
+  purchaseSound: {fileID: 8300000, guid: 7deb844c65408e24b8014b11b5b6d7ab, type: 3}
+  sfxVolume: 1
   colorNone: {r: 0.77254903, g: 0.77254903, b: 0.77254903, a: 1}
   colorEasyMiniGame: {r: 0.7, g: 0.5, b: 0.8, a: 1}
   colorNoBelowB: {r: 0.4, g: 0.6, b: 1, a: 1}
+  characterInfoManager: {fileID: 0}
 --- !u!114 &2161356641769979796
 MonoBehaviour:
   m_ObjectHideFlags: 0
