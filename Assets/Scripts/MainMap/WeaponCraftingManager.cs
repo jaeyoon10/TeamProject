@@ -15,6 +15,12 @@ public class WeaponCraftingManager : MonoBehaviour
     public Transform hammerPosition;
     public Transform grindingPosition;
     public Transform doorPosition;
+    public Transform enhancePosition;
+
+    public CustomerController CurrentCustomer { get; private set; }
+    public void OnCustomerArrived(CustomerController c) => CurrentCustomer = c;
+    public void OnCustomerLeft(CustomerController c) { if (CurrentCustomer == c) CurrentCustomer = null; }
+
 
     [Header("Result UI")]
     public CraftingCompletePopup completePopup;
@@ -33,7 +39,6 @@ public class WeaponCraftingManager : MonoBehaviour
     public int wGreat = +7;
     public int wGood = +5;
     public int wMiss = -10;
-
 
     [System.Serializable]
     public class MiniSceneBinding
@@ -70,8 +75,6 @@ public class WeaponCraftingManager : MonoBehaviour
         // 준비된 뒤 스폰 (한 번 더 안전)
         yield return StartCoroutine(customerSpawner.SpawnWhenReady());
     }
-
-    public void OnCustomerArrived(CustomerController c) => _currentCustomer = c;
 
     public void StartCrafting(RecipeData recipe)
     {
@@ -349,10 +352,41 @@ public class WeaponCraftingManager : MonoBehaviour
         completePopup.Show(recipe, quality, star, () => closed = true);
         yield return new WaitUntil(() => closed);
 
+        if (completePopup.WentToEnhance)
+        {
+            yield return StartCoroutine(GoEnhanceFlow(recipe, quality));
+            yield break; // 판매는 강화창에서 "판매" 버튼 누르면 진행
+        }
+
         yield return StartCoroutine(MoveTo(doorPosition.position));
         yield return new WaitForSeconds(1f);
 
-        _currentCustomer?.ServeWeapon(recipe, quality);
+        CurrentCustomer?.ServeWeapon(recipe, quality);
+    }
+
+    IEnumerator GoEnhanceFlow(RecipeData recipe, int quality)
+    {
+        EnchantSession.Start(recipe, quality);               // 세션에 결과 저장
+        yield return StartCoroutine(MoveTo(enhancePosition.position)); // 강화대로 이동
+        EnchantUIManager.Instance.Show();                    // 강화창 오픈(ModalController.Show() 내부)
+    }
+
+    public void RequestSellAfterEnchant()
+    {
+        StartCoroutine(SellAfterEnhanceFlow());
+    }
+
+    IEnumerator SellAfterEnhanceFlow()
+    {
+        // 강화창 닫힌 뒤 이동
+        yield return StartCoroutine(MoveTo(doorPosition.position));
+        yield return new WaitForSeconds(1f);
+
+        if (CurrentCustomer && EnchantSession.IsActive)
+        {
+            CurrentCustomer.ServeWeapon(EnchantSession.Recipe, EnchantSession.QualityScore);
+        }
+        EnchantSession.Clear(); // 세션 정리
     }
 
     public int CalcStar(int score)

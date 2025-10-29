@@ -1,0 +1,19 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 45f35dfeb3304a74fb25c628d77ea872, type: 3}
+  m_Name: CustomerType_Poor_M
+  m_EditorClassIdentifier: 
+  customerTitle: "\uAC70\uC9C0"
+  displayName: "\uAC70\uC9C0"
+  customerPrefab: {fileID: 5043023642148850455, guid: 9720836675664074ab4d51f7705161e3, type: 3}
+  spawnWeight: 4
+  paymentMultiplier: 0.65

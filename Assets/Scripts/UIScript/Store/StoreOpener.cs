@@ -22,12 +22,12 @@ public class StoreOpener : MonoBehaviour
         storeCloseButton.onClick.AddListener(CloseStorePanel);
     }
 
-    void ShowStorePanel()
+    public void ShowStorePanel()
     {
         storePanel.SetActive(true);
     }
 
-    void CloseStorePanel()
+    public void CloseStorePanel()
     {
         storePanel.SetActive(false);
     }

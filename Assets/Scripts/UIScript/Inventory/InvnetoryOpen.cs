@@ -22,12 +22,12 @@ public class InvnetoryOpen : MonoBehaviour
         InventoryCloseButton.onClick.AddListener(CloseInventoryPanel);
     }
 
-    void ShowInventoryPanel()
+    public void ShowInventoryPanel()
     {
         InventoryPanel.SetActive(true);
     }
 
-    void CloseInventoryPanel()
+    public void CloseInventoryPanel()
     {
         InventoryPanel.SetActive(false);
     }

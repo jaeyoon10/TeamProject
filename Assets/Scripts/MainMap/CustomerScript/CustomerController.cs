@@ -7,6 +7,10 @@ using UnityEngine.UI;
 using UnityEngine.XR;
 public class CustomerController : MonoBehaviour
 {
+
+    [Header("손님 타입 데이터")]
+    public CustomerType type;
+
     [Header("손님 애니메이터 & 위치")]
     public Animator animator;
     public Transform targetDoor;    // 도착할 위치
@@ -32,6 +36,7 @@ public class CustomerController : MonoBehaviour
 
         // 걷기 애니메이션 + 이동
         animator.SetBool("isMoving", true);
+        Debug.Log($"Animator connected? {animator != null}");
         StartCoroutine(WalkToDoor());
     }
 
@@ -83,12 +88,11 @@ public class CustomerController : MonoBehaviour
             Debug.LogWarning("[Customer] 사용할 수 있는 레시피 없음");
             return;
         }
-        
 
         demandRecipe = available[Random.Range(0, available.Count)];
 
-        DialogUIManager.Instance.ShowDialog(demandRecipe);
-
+        // 여기서 타입 전달
+        DialogUIManager.Instance.ShowDialog(demandRecipe, type);
         DialogQuestUI.Instance.SetQuestText($"{demandRecipe.weaponName}을(를) 만들어 주세요");
     }
 
@@ -156,8 +160,23 @@ public class CustomerController : MonoBehaviour
             case 2: bonus = -500; break;
             default: bonus = -900; break;
         }
-        int price = Mathf.Max(100, basePrice + bonus);
-        Debug.Log($"[Customer] XP Calc → base={basePrice}, star={star}, price={price}");
+        // 1) 품질(별점)까지 반영한 기본 금액
+        int price = basePrice + bonus;
+
+        // 2) 손님 타입 보정 (없으면 기본 1.0 / +0 으로 처리)
+        float mult = (type != null) ? type.paymentMultiplier : 1f;
+
+        price = Mathf.RoundToInt(price * mult);
+
+        if (EnchantSession.IsActive)
+            price = Mathf.RoundToInt(price * EnchantSession.GetPayMultiplier());
+
+        // 3) 최소 100 보장
+        price = Mathf.Max(100, price);
+
+        Debug.Log($"[Customer] Pay Calc → base={basePrice}, star={star}, afterStar={basePrice + bonus}, " +
+                  $"type={(type ? type.displayName : "None")}, mult={mult}, final={price}");
+
         return price;
     }
 
