@@ -19886,9 +19886,9 @@ MonoBehaviour:
   slotPrefab: {fileID: 6852658463156572679, guid: 063e73cde422c104c883206225c9f62a, type: 3}
   allRecipes:
   - {fileID: 11400000, guid: 778fbcdc0e6dbd04c9007b76f5f55aa9, type: 2}
-  - {fileID: 11400000, guid: 0e9420b2d206e954eb44f76f53549122, type: 2}
-  - {fileID: 11400000, guid: b95d10cb3ccc2c642a592b5edbdad2b7, type: 2}
   - {fileID: 11400000, guid: 723c16907480e2c4faca7d8d0e315f06, type: 2}
+  - {fileID: 11400000, guid: b95d10cb3ccc2c642a592b5edbdad2b7, type: 2}
+  - {fileID: 11400000, guid: 0e9420b2d206e954eb44f76f53549122, type: 2}
   detailPanel: {fileID: 1191728680}
   detailIcon: {fileID: 142955995}
   detailName: {fileID: 365762439}

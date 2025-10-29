@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Enchant
   m_EditorClassIdentifier: 
   unlockLevel: 5
-  icon: {fileID: 5393448996881579246, guid: c83fa2ac472c64145a29bad9c05a9a50, type: 3}
+  icon: {fileID: 21300000, guid: 31ddb1054bf36874aaf827fb4b579c2d, type: 3}
   description: "\uAC15\uD654 \uC2DC\uC2A4\uD15C"

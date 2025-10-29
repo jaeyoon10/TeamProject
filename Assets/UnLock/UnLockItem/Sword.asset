@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d70b08607355e0489bb478d1b37eb22, type: 3}
   m_Name: Sword
   m_EditorClassIdentifier: 
-  unlockLevel: 2
-  icon: {fileID: 712035800519618848, guid: 5555116c8467a454c8c90c5cece8dc84, type: 3}
+  unlockLevel: 1
+  icon: {fileID: 21300000, guid: c24e9cd81c9cefb4b95cf9b6c6c550a8, type: 3}
   description: "\uCCA0 \uAC80 \uC81C\uC791 \uD574\uAE08"

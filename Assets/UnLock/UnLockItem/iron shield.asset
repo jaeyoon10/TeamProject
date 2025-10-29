@@ -12,6 +12,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1d70b08607355e0489bb478d1b37eb22, type: 3}
   m_Name: iron shield
   m_EditorClassIdentifier: 
-  unlockLevel: 2
-  icon: {fileID: -7314038943984137149, guid: 888bc6c3bee4a644894eb075d8d389f5, type: 3}
+  unlockLevel: 3
+  icon: {fileID: 21300000, guid: e996ac0f75699aa43b13a41db830c54f, type: 3}
   description: "\uCCA0 \uBC29\uD328 \uC81C\uC791 \uD574\uAE08"

@@ -13,5 +13,5 @@ MonoBehaviour:
   m_Name: Shield
   m_EditorClassIdentifier: 
   unlockLevel: 2
-  icon: {fileID: -6717884257390833292, guid: 6f2409c812e59e04fb9d2af0715bea80, type: 3}
+  icon: {fileID: 21300000, guid: e996ac0f75699aa43b13a41db830c54f, type: 3}
   description: "\uBC29\uD328 \uC81C\uC791 \uD574\uAE08"

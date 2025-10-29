@@ -15,7 +15,7 @@ MonoBehaviour:
   weaponName: "\uBC29\uD328"
   icon: {fileID: 21300000, guid: e996ac0f75699aa43b13a41db830c54f, type: 3}
   baseXP: 0
-  requiredLevel: 3
+  requiredLevel: 2
   xpReward: 35
   basePrice: 900
   ingredients:

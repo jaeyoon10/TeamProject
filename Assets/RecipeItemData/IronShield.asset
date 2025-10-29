@@ -15,16 +15,13 @@ MonoBehaviour:
   weaponName: "\uCCA0 \uBC29\uD328"
   icon: {fileID: 21300000, guid: e996ac0f75699aa43b13a41db830c54f, type: 3}
   baseXP: 0
-  requiredLevel: 2
+  requiredLevel: 3
   xpReward: 50
   basePrice: 1200
   ingredients:
   - name: "\uCCA0"
     icon: {fileID: 21300000, guid: cf9edd0a726c7ab4495bbb770ee6cbb3, type: 3}
     amount: 3
-  - name: "\uD30C\uB780 \uBCF4\uC11D"
-    icon: {fileID: 7550001675942822110, guid: e5b82729baeb4b542bc3b0dbde0a1791, type: 3}
-    amount: 2
   - name: "\uB098\uBB34"
     icon: {fileID: 21300000, guid: 61b5486169a2fe945a3594fa88fe5316, type: 3}
     amount: 2
