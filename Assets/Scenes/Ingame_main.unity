@@ -5830,7 +5830,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: f9b4add83e5b1c842891acec36b54c14, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  customerPrefab: {fileID: 8189980434977739222, guid: 2dfbb63c9cdf7504faf4ff26b0581598, type: 3}
+  customerTypes:
+  - {fileID: 11400000, guid: b2d32ed061aad9d48bc34caa74acf5df, type: 2}
+  - {fileID: 11400000, guid: 29e51dcc54219dc40bb2c9e819da1962, type: 2}
+  - {fileID: 11400000, guid: 185648615ee682045928645dc10c1383, type: 2}
+  - {fileID: 11400000, guid: 1f6890efe772ff14b90c679e1c457dff, type: 2}
+  - {fileID: 11400000, guid: f606392654cf1024b957279b9ce484f5, type: 2}
+  - {fileID: 11400000, guid: 6e460da668264aa459c7b401ed05c545, type: 2}
+  - {fileID: 11400000, guid: c7987058b6f57d641aae12c0fdca43c5, type: 2}
+  - {fileID: 11400000, guid: 6f997fbe60e0f7d48b001a39e8ebf63a, type: 2}
   spawnPoint: {fileID: 1662910399}
   targetDoor: {fileID: 2116530724}
 --- !u!4 &550376490
@@ -10476,6 +10484,7 @@ MonoBehaviour:
   hammerPosition: {fileID: 476345209}
   grindingPosition: {fileID: 2051029261}
   doorPosition: {fileID: 1835682799}
+  enhancePosition: {fileID: 1294771306}
   completePopup: {fileID: 0}
   camSwap: {fileID: 245282003}
   furnaceSceneName: MiniGameBrasier
