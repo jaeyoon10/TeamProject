@@ -119,9 +119,16 @@ public class CustomerController : MonoBehaviour
             CharacterInfoManager.Instance.AddStressPoint();
             CharacterInfoManager.Instance.AddStressPoint();
 
-            Debug.Log("[Customer] 잘못된 무기 제공 -> 골드 -200 스트레스 +2 경험치 x");
+            DialogUIManager.Instance.SetAfterClose(() => { StartCoroutine(Depart()); });
 
-            StartCoroutine(Depart());
+            // 보상 다이얼로그 띄우기
+            DialogUIManager.Instance.ShowRewardDialog(
+                recipe: demandRecipe,     // 손님이 요구했던 무기
+                customerType: type,
+                gold: -200,
+                exp: 0,
+                stressDelta: +2
+            );
             return;
         }
         // 별 개수 계산
@@ -145,8 +152,17 @@ public class CustomerController : MonoBehaviour
         for (int i = 0; i < stressGain; i++)
             CharacterInfoManager.Instance.AddStressPoint();
 
-        // 3) 퇴장
-        StartCoroutine(Depart());
+        /// 닫히면 퇴장하도록 예약
+        DialogUIManager.Instance.SetAfterClose(() => { StartCoroutine(Depart()); });
+
+        // 보상 다이얼로그 띄우기
+        DialogUIManager.Instance.ShowRewardDialog(
+            recipe: demandRecipe,
+            customerType: type,
+            gold: payment,
+            exp: xpGain,
+            stressDelta: +stressGain
+        );
     }
 
     int CalculatePayment(int basePrice, int star)

@@ -21,4 +21,6 @@ public class CustomerType : ScriptableObject
     [Tooltip("최종 지불액에 곱해질 배수. 예: 거지 0.7, 기본 1.0, 부유층 1.5")]
     [Range(0.1f, 5f)] public float paymentMultiplier = 1.0f;
 
+    [TextArea]
+    public string leaveLine;
 }
