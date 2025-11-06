@@ -234,8 +234,6 @@ public class CustomerController : MonoBehaviour
         if (ModalController.IsOpen)
             yield return new WaitUntil(() => !ModalController.IsOpen);
 
-        // 잠시 대기
-        yield return new WaitForSeconds(1f);
 
         transform.LookAt(exitPoint.position);
 

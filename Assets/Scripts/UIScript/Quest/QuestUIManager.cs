@@ -1,127 +1,117 @@
-﻿using System.Collections;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.UI;
 
 public class QuestUIManager : MonoBehaviour
 {
-    [Header("의뢰 슬롯 프리팹")]
+    [Header("슬롯 프리팹 & 컨테이너")]
     public GameObject questSlotPrefab;
-
-    [Header("Content Transform")]
     public Transform contentParent;
 
-    [Header("가능한 모든 의뢰 데이터 목록 (코드에서 채워질 예정)")]
-    public List<QuestData> possibleQuests = new List<QuestData>();
+    [Header("데이터 로드 옵션")]
+    public bool loadFromResources = true;
 
-    [Header("하루에 최대 생성할 의뢰 개수")]
-    public int maxQuestsPerDay = 2;
+    public List<QuestData> questChain = new List<QuestData>();
 
-    private List<GameObject> currentSlots = new List<GameObject>();
+    public int activeCount = 2; // 스샷처럼 2줄도 가능
 
+    List<GameObject> _currentSlots = new();
+    int _nextIndexToOpen = 0; // 다음에 열릴 퀘스트 인덱스
 
     void Start()
     {
-        // 만약 Inspector에서 possibleQuests를 채우지 않았다면, 코드로 몇 가지 퀘스트를 추가
-        if (possibleQuests.Count == 0)
-        {
-            PopulateQuestsByCode();
-        }
 
-        // 의뢰 창을 열 때(혹은 Start 직후) 하루치 퀘스트를 생성
-        GenerateDailyQuests();
+        if (loadFromResources)
+            LoadQuestsFromResources();
+
+        BuildActiveSlots();
     }
 
-    private void PopulateQuestsByCode()
+    void LoadQuestsFromResources()
     {
-        // 1) 첫 번째 퀘스트: "기술자 모집"
-        QuestData q1 = new QuestData();
-        q1.questName = "기술자 모집";
-        q1.description = "마을의 대장장이가 금속을 남쪽 광산에서 공수해 달라고 합니다.";
-        q1.rewardText = "경험치 50xp, 금화 100G";
-        // Resources/QuestSprites/Smith.png 라는 경로에 스프라이트가 있다고 가정
-        q1.characterSprite = Resources.Load<Sprite>("QuestSprite/123");
-        possibleQuests.Add(q1);
+        questChain.Clear();
+        var sos = Resources.LoadAll<QuestDataSO>("Quests");
+        System.Array.Sort(sos, (a, b) => a.order.CompareTo(b.order));
 
-        // 2) 두 번째 퀘스트: "전장의 부상병 구호"
-        QuestData q2 = new QuestData();
-        q2.questName = "부상병 구호";
-        q2.description = "전쟁터 부상병에게 물약을 전달해 주세요.";
-        q2.rewardText = "경험치 80xp, 금화 150G";
-        q2.characterSprite = Resources.Load<Sprite>("QuestSprite/432");
-        possibleQuests.Add(q2);
-
-        // 3) 세 번째 퀘스트: "음식 배달"
-        QuestData q3 = new QuestData();
-        q3.questName = "음식 배달";
-        q3.description = "마을 남쪽에서 상점까지 빵과 과일을 배달해 주세요.";
-        q3.rewardText = "경험치 30xp, 금화 50G";
-        q3.characterSprite = Resources.Load<Sprite>("QuestSprite/12323");
-        possibleQuests.Add(q3);
+        foreach (var so in sos)
+        {
+            var q = new QuestData
+            {
+                characterSprite = so.characterSprite,
+                questName = so.questName,
+                description = so.description,
+                targetCount = so.targetCount,
+                rewardExp = so.rewardExp,
+                rewardGold = so.rewardGold
+            };
+            questChain.Add(q);
+        }
     }
 
-    public void GenerateDailyQuests()
+        void BuildActiveSlots()
     {
         ClearAllSlots();
 
-        int count = Random.Range(0, maxQuestsPerDay + 1);
-
-        List<int> indices = new List<int>();
-        for (int i = 0; i < possibleQuests.Count; i++)
+        // 아직 열리지 않은 퀘스트에서 activeCount개까지 활성화
+        int opened = 0;
+        for (int i = _nextIndexToOpen; i < questChain.Count && opened < activeCount; i++)
         {
-            indices.Add(i);
-        }
-        for (int i = 0; i < indices.Count; i++)
-        {
-            int rand = Random.Range(i, indices.Count);
-            int tmp = indices[i];
-            indices[i] = indices[rand];
-            indices[rand] = tmp;
-        }
-
-        for (int i = 0; i < count && i < indices.Count; i++)
-        {
-            int questIdx = indices[i];
-            QuestData qd = possibleQuests[questIdx];
-            CreateQuestSlot(qd);
+            var q = questChain[i];
+            CreateQuestSlot(q);
+            opened++;
         }
     }
 
-    private void CreateQuestSlot(QuestData data)
+    void CreateQuestSlot(QuestData data)
     {
-        if (questSlotPrefab == null || contentParent == null || data == null)
-        {
-            return;
-        }
-        GameObject go = Instantiate(questSlotPrefab, contentParent);
+        if (questSlotPrefab == null || contentParent == null || data == null) return;
 
-        RectTransform rt = go.GetComponent<RectTransform>();
-        if (rt != null)
-        {
-            rt.localPosition = Vector3.one;
-            rt.anchoredPosition3D = Vector3.zero;
-        }
-        QusetSlotController slotCtrl = go.GetComponent<QusetSlotController>();
-        if (slotCtrl != null)
-        {
-            slotCtrl.SetData(data);
-        }
-
-        // 4) 생성된 슬롯을 리스트에 추가
-        currentSlots.Add(go);
+        var go = Instantiate(questSlotPrefab, contentParent);
+        var slot = go.GetComponent<QusetSlotController>();
+        slot.SetData(data, OnClaimReward);
+        _currentSlots.Add(go);
     }
 
-    private void ClearAllSlots()
+    void ClearAllSlots()
     {
-        foreach (var go in currentSlots)
-        {
-            if (go != null)
-            {
-                Destroy(go);
-            }
-        }
-        currentSlots.Clear();
+        foreach (var go in _currentSlots) if (go) Destroy(go);
+        _currentSlots.Clear();
     }
 
+    // 외부에서 진행도 업데이트용 (예: 전투 완료 시 호출)
+    public void AddProgressTo(string questName, int amount = 1)
+    {
+        var q = questChain.Find(x => x.questName == questName);
+        if (q == null) return;
+
+        q.AddProgress(amount);
+        RefreshAll();
+    }
+
+    void RefreshAll()
+    {
+        foreach (var go in _currentSlots)
+            if (go && go.TryGetComponent<QusetSlotController>(out var slot))
+                slot.Refresh();
+    }
+
+    // 보상 수령 시 호출: 다음 퀘스트를 열어준다(순차 진행)
+    void OnClaimReward(QuestData claimed)
+    {
+        // 보상 지급: 실제 게임 매니저(골드/경험치 매니저)에 연결
+        MoneyManager.Instance?.AddGold(claimed.rewardGold);
+        CharacterInfoManager.Instance?.AddXP(claimed.rewardExp);
+
+        CharacterInfoManager.Instance?.AddQuestProfit(claimed.rewardGold);
+
+        // 체인에서 다음 슬롯 열기 로직
+        int claimedIndex = questChain.IndexOf(claimed);
+        if (claimedIndex == _nextIndexToOpen)
+        {
+            // 가장 앞쪽 활성 퀘스트를 수령했다면 개시 인덱스 +1
+            _nextIndexToOpen = Mathf.Min(_nextIndexToOpen + 1, questChain.Count);
+        }
+
+        // UI 재구성(활성 라인 유지)
+        BuildActiveSlots();
+    }
 }
-

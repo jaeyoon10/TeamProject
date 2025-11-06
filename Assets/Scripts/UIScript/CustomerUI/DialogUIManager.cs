@@ -8,6 +8,7 @@ public class DialogUIManager : MonoBehaviour
 {
     private System.Action _afterClose;
     public static DialogUIManager Instance { get; private set; }
+    private bool _ownsModal = false;
 
     [Header("Dialog UI")]
     public GameObject dialogPanel;
@@ -78,6 +79,8 @@ public class DialogUIManager : MonoBehaviour
         isShowing = true;
 
         if (rewardRow != null) rewardRow.SetActive(false);
+
+        _ownsModal = false;
     }
 
     private string GetDialogLine(string title, string weaponName)
@@ -94,8 +97,8 @@ public class DialogUIManager : MonoBehaviour
                 return $"[왕] 나를 위해 {weaponName}을(를) 제작하거라!";
             case "여왕":
                 return $"[여왕] {weaponName}, 그대의 솜씨를 기대하겠어요.";
-            case "부자 손님":
-                return $"[부자 손님] 금은보화로 치르겠소. 최고의 {weaponName} 부탁하지.";
+            case "부자":
+                return $"[부자] 금은보화로 치르겠소. 최고의 {weaponName} 부탁하지.";
             default:
                 return $"[손님] {weaponName}을(를) 제작해 주세요!";
         }
@@ -140,6 +143,8 @@ public class DialogUIManager : MonoBehaviour
                 CreateRewardSlot(stressIcon, stressDelta, prefixX: false, color: c);
             }
         }
+        _ownsModal = true;
+        ModalController.Show();
     }
 
     private string GetLeaveLine(string title, string weaponName, string customLeaveLine)
@@ -161,8 +166,8 @@ public class DialogUIManager : MonoBehaviour
                 return $"[왕] 충실히 임무를 수행했군. 내 마음에 들었다.";
             case "여왕":
                 return $"[여왕] 아름다운 솜씨네요. 수고하셨어요.";
-            case "부자 손님":
-                return $"[부자 손님] 훌륭하군! 다음에도 부탁하지.";
+            case "부자":
+                return $"[부자] 훌륭하군! 다음에도 부탁하지.";
             default:
                 return $"[손님] 고마워! 다음에도 부탁할게!";
         }
@@ -182,7 +187,11 @@ public class DialogUIManager : MonoBehaviour
 
     public void HideDialog()
     {
-        ModalController.Hide();
+        if (_ownsModal)
+        {
+            ModalController.Hide();
+            _ownsModal = false;
+        }
 
         if (dialogPanel != null)
             dialogPanel.SetActive(false);

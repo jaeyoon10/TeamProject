@@ -72,6 +72,10 @@ public class CustomerSpawner : MonoBehaviour
                 $"targetDoor={(targetDoor ? "OK" : "NULL")}, " +
                 $"hasValidType={(customerTypes != null && customerTypes.Length > 0 ? "OK" : "FALSE")}"
                  );
+
+        yield return new WaitForSeconds(2f); // → 원하는 대기시간 (여기만 바꾸면 됨)
+        StartCoroutine(SpawnWhenReady());
+
         if (!IsReady)
         {
             Debug.LogError("CustomerSpawner 준비 실패: 필드/타입 설정을 확인하세요.");

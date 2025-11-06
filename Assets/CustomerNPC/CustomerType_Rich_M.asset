@@ -14,6 +14,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   customerTitle: "\uBD80\uC790"
   displayName: "\uBD80\uC790"
-  customerPrefab: {fileID: 4686043079014444211, guid: 69c38977d713bff4fa2572cc7c45c56d, type: 3}
+  customerPrefab: {fileID: 8506033962109080423, guid: 468766020773fb44f9daf5238612bcbc, type: 3}
   spawnWeight: 4
-  paymentMultiplier: 1.5
+  paymentMultiplier: 1.2
+  leaveLine: 

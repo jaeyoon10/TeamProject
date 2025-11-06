@@ -133,9 +133,10 @@ public class RhythmGameManager : MonoBehaviour
 
     void Update()
     {
+
         if (!playing && finished) return;
 
-        if (playing)
+        if (playing || activeNotes.Count > 0)
         {
             if (Input.GetKeyDown(KeyCode.A)) TryHit(Lane.A);
             if (Input.GetKeyDown(KeyCode.D)) TryHit(Lane.D);

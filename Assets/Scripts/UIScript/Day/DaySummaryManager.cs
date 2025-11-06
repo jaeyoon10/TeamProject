@@ -40,16 +40,6 @@ public class DaySummaryManager : MonoBehaviour
     [Header("=== Confirm 버튼 ===")]
     public Button confirmButton;         // “확인” 버튼
 
-    [Header("=== 기타 설정 ===")]
-    [Tooltip("플레이어 레벨에 따라 다음 날 의뢰 개수 상한을 설정합니다.")]
-    public int playerLevel = 1;
-
-    [Tooltip("현재 몇 일째인지")]
-    public int currentDay = 1;
-
-    // 의뢰 관리용 QuestUIManager 참조 (씬에 배치되어 있어야 합니다)
-    public QuestUIManager questUIManager;
-
     // 스트레스 관리 및 누적 초기화를 위해 CharacterInfoManager 참조
     public CharacterInfoManager characterInfoManager;
 
@@ -77,7 +67,7 @@ public class DaySummaryManager : MonoBehaviour
     {
         // 1) “N일째” 텍스트 업데이트
         if (dayText != null)
-            dayText.text = $"{currentDay}일째";
+            dayText.text = $"{characterInfoManager.CurrentDay}일째";
 
         // 2) 각 금액 텍스트 업데이트(양수=금색, 음수=빨간색)
         UpdateAmountText(제작_AmountText, profit제작);
@@ -129,21 +119,13 @@ public class DaySummaryManager : MonoBehaviour
         if (daySummaryPanel != null)
             daySummaryPanel.SetActive(false);
 
-        // 2) 날짜 증가
-        currentDay++;
-
-        // 3) Player Level에 따라 다음 날 의뢰 개수 상한을 설정
-        int newMaxQuests = GetMaxQuestsByLevel(characterInfoManager.currentLevel);
-        if (questUIManager != null)
-        {
-            questUIManager.maxQuestsPerDay = newMaxQuests;
-            questUIManager.GenerateDailyQuests();
-        }
-
         // 4) 스트레스 초기화 및 캐릭터 정보 초기화
         if (characterInfoManager != null)
         {
             characterInfoManager.ResetForNextDay();
+
+            if (dayText != null)
+                dayText.text = $"{characterInfoManager.CurrentDay}일째";
         }
         // 5) 상점 완전 리프레시
         if (storeSlotLoader != null)
@@ -156,21 +138,5 @@ public class DaySummaryManager : MonoBehaviour
         };
 
         ModalController.Hide();
-    }
-
-    /// <summary>
-    /// 플레이어 레벨에 따라 “하루에 생성할 의뢰 개수 상한”을 결정
-    /// 1~9레벨: 3개, 10~19레벨: 5개, 20~29레벨: 7개, 30이상: 10개
-    /// </summary>
-    private int GetMaxQuestsByLevel(int level)
-    {
-        if (level <= 9)
-            return 3;
-        else if (level <= 19)
-            return 5;
-        else if (level <= 29)
-            return 7;
-        else
-            return 10;
     }
 }

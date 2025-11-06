@@ -16,4 +16,5 @@ MonoBehaviour:
   displayName: "\uAC70\uC9C0"
   customerPrefab: {fileID: 1559040079207112421, guid: a20abca4acd8ed14b99782503d6e46df, type: 3}
   spawnWeight: 4
-  paymentMultiplier: 0.65
+  paymentMultiplier: 0.6
+  leaveLine: 

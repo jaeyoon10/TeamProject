@@ -71,9 +71,6 @@ public class WeaponCraftingManager : MonoBehaviour
         if (!customerSpawner) customerSpawner = FindObjectOfType<CustomerSpawner>();
 
         yield return new WaitUntil(() => customerSpawner != null && customerSpawner.IsReady);
-
-        // 준비된 뒤 스폰 (한 번 더 안전)
-        yield return StartCoroutine(customerSpawner.SpawnWhenReady());
     }
 
     public void StartCrafting(RecipeData recipe)
