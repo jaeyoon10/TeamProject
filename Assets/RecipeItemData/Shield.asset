@@ -21,7 +21,7 @@ MonoBehaviour:
   ingredients:
   - name: "\uB098\uBB34"
     icon: {fileID: 21300000, guid: 61b5486169a2fe945a3594fa88fe5316, type: 3}
-    amount: 2
+    amount: 4
   - name: "\uCCA0"
     icon: {fileID: 21300000, guid: cf9edd0a726c7ab4495bbb770ee6cbb3, type: 3}
     amount: 1
