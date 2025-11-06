@@ -2,8 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 
-[CreateAssetMenu(menuName = "Quests/Quest", fileName = "Quest_")]
-public class QuestDataSO : MonoBehaviour
+[CreateAssetMenu(menuName = "Game/Quest", fileName = "Quest_")]
+public class QuestDataSO : ScriptableObject
 {
     [Header("Ç¥½Ã")]
     public Sprite characterSprite;

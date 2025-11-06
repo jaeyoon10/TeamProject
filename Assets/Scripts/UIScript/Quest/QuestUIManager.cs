@@ -29,7 +29,7 @@ public class QuestUIManager : MonoBehaviour
     void LoadQuestsFromResources()
     {
         questChain.Clear();
-        var sos = Resources.LoadAll<QuestDataSO>("Quests");
+        var sos = Resources.LoadAll<QuestDataSO>("QuestData");
         System.Array.Sort(sos, (a, b) => a.order.CompareTo(b.order));
 
         foreach (var so in sos)
