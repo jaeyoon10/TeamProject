@@ -13,7 +13,7 @@ MonoBehaviour:
   m_Name: IronShield
   m_EditorClassIdentifier: 
   weaponName: "\uCCA0 \uBC29\uD328"
-  icon: {fileID: 21300000, guid: e996ac0f75699aa43b13a41db830c54f, type: 3}
+  icon: {fileID: 21300000, guid: f77b64333e2b9aa4c8a8379aa845cd5f, type: 3}
   baseXP: 0
   requiredLevel: 3
   xpReward: 50
@@ -21,7 +21,4 @@ MonoBehaviour:
   ingredients:
   - name: "\uCCA0"
     icon: {fileID: 21300000, guid: cf9edd0a726c7ab4495bbb770ee6cbb3, type: 3}
-    amount: 3
-  - name: "\uB098\uBB34"
-    icon: {fileID: 21300000, guid: 61b5486169a2fe945a3594fa88fe5316, type: 3}
-    amount: 2
+    amount: 4
