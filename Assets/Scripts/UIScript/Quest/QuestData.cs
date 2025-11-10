@@ -21,6 +21,7 @@ public class QuestData
     [Header("상태")]
     public bool isClaimed = false;      // 보상 수령 여부
 
+    public string progressKey;
     public bool IsCompleted => currentCount >= targetCount;
     public float Progress01 => targetCount > 0 ? Mathf.Clamp01((float)currentCount / targetCount) : 1f;
 

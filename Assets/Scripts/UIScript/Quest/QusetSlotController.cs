@@ -52,7 +52,14 @@ public class QusetSlotController : MonoBehaviour
         if (titleText) titleText.text = _data.questName;
         if (descriptiontext) descriptiontext.text = _data.description;
 
-        if (progressFill) progressFill.fillAmount = _data.Progress01;
+        if (progressFill)
+        {
+            progressFill.type = Image.Type.Filled;
+            progressFill.fillMethod = Image.FillMethod.Horizontal;
+            progressFill.fillOrigin = 0; // Left
+            progressFill.fillAmount = _data.Progress01; // current/target
+        }
+
         if (progressLabel) progressLabel.text = $"{_data.currentCount}/{_data.targetCount}";
 
         if (claimButton) claimButton.interactable = _data.IsCompleted;

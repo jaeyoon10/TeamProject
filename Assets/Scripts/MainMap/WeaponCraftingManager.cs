@@ -345,6 +345,9 @@ public class WeaponCraftingManager : MonoBehaviour
 
     IEnumerator OnCraftingComplete(RecipeData recipe, int quality, int star)
     {
+        QuestBridge.Progress(GetCraftProgressKey(recipe));
+
+
         bool closed = false;
         completePopup.Show(recipe, quality, star, () => closed = true);
         yield return new WaitUntil(() => closed);
@@ -359,6 +362,26 @@ public class WeaponCraftingManager : MonoBehaviour
         yield return new WaitForSeconds(1f);
 
         CurrentCustomer?.ServeWeapon(recipe, quality);
+        QuestBridge.Progress("Sell20_weapone");
+    }
+
+    string GetCraftProgressKey(RecipeData r)
+    {
+        // 1) 무기 타입 enum이 있다면 그걸 쓰는 게 가장 좋음 (예시)
+        // switch (r.weaponType) {
+        //     case WeaponType.Sword: return "Craft_Sword";
+        //     case WeaponType.Axe:   return "Craft_Axe";
+        //     case WeaponType.Shield:return "Craft_Shild";
+        // }
+
+        // 2) 타입이 없다면 이름으로 매핑(한글명 기준 예시)
+        var n = r.weaponName ?? "";
+        if (n.Contains("칼")) return "Craft_Sword";
+        if (n.Contains("도끼")) return "Craft_Axe";
+        if (n.Contains("방패")) return "Craft_Shild";
+
+        // 3) 기본값(혹시 모를 예외)
+        return "Craft_Sword";
     }
 
     IEnumerator GoEnhanceFlow(RecipeData recipe, int quality)
@@ -381,6 +404,13 @@ public class WeaponCraftingManager : MonoBehaviour
 
         if (CurrentCustomer && EnchantSession.IsActive)
         {
+            //  판매 퀘스트 +1
+            QuestBridge.Progress("Sell20_weapone");
+
+            // 5강 이상일 때는 이것도 +1
+            if (EnchantSession.enchantLevel >= 5)
+                QuestBridge.Progress("Enchant5_Sell");
+
             CurrentCustomer.ServeWeapon(EnchantSession.Recipe, EnchantSession.QualityScore);
         }
         EnchantSession.Clear(); // 세션 정리

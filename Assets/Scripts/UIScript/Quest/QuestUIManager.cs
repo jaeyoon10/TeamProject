@@ -41,7 +41,8 @@ public class QuestUIManager : MonoBehaviour
                 description = so.description,
                 targetCount = so.targetCount,
                 rewardExp = so.rewardExp,
-                rewardGold = so.rewardGold
+                rewardGold = so.rewardGold,
+                progressKey = so.progressKey
             };
             questChain.Add(q);
         }
@@ -78,10 +79,17 @@ public class QuestUIManager : MonoBehaviour
     }
 
     // 외부에서 진행도 업데이트용 (예: 전투 완료 시 호출)
-    public void AddProgressTo(string questName, int amount = 1)
+    public void AddProgressTo(string key, int amount = 1)
     {
-        var q = questChain.Find(x => x.questName == questName);
-        if (q == null) return;
+        var q = questChain.Find(x =>
+        (!string.IsNullOrEmpty(x.progressKey) && x.progressKey == key) ||
+        (string.IsNullOrEmpty(x.progressKey) && x.questName == key));
+
+        if (q == null)
+        {
+            Debug.LogWarning("[Quest] 진행 대상 없음: " + key);
+            return;
+        }
 
         q.AddProgress(amount);
         RefreshAll();

@@ -10,6 +10,9 @@ public class QuestDataSO : ScriptableObject
     public string questName;
     [TextArea] public string description;
 
+    [Header("진행 키 (예: Craft_Knife, Sell_Axe, Enhance5_Sell)")]
+    public string progressKey;
+
     [Header("목표/보상")]
     public int targetCount = 1;
     public int rewardExp = 0;
