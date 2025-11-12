@@ -32,6 +32,10 @@ public class InventoryUI : MonoBehaviour
     private bool effectFirst = true;    // 효과 재료 우선 모드 토글 플래그
     private bool newestFirst = true;    // 획득 순 토글 플래그
 
+    private bool pickMode = false;
+    private System.Action<InventoryItem> pickHandler;
+    private System.Predicate<InventoryItem> pickFilter;
+
     private void Awake()
     {
         if (allItems == null)
@@ -99,6 +103,32 @@ public class InventoryUI : MonoBehaviour
         Refresh();
     }
 
+    /// <summary>강화용 “픽 모드” 켜기: 클릭 시 handler로 아이템 전달</summary>
+    public void SetPickMode(System.Action<InventoryItem> handler, System.Predicate<InventoryItem> filter = null)
+    {
+        pickMode = true;
+        pickHandler = handler;
+        pickFilter = filter;
+        Refresh();
+    }
+
+    /// <summary>픽 모드 해제</summary>
+    public void ClearPickMode()
+    {
+        pickMode = false;
+        pickHandler = null;
+        pickFilter = null;
+        Refresh();
+    }
+
+    private void OnSlotClickedForPick(InventoryItem item)
+    {
+        if (!pickMode) return;
+        if (pickFilter != null && !pickFilter(item)) return;
+        pickHandler?.Invoke(item);
+        ClearPickMode();
+    }
+
     public void Refresh()
     {
         // 1) 기존 슬롯 전부 제거
@@ -152,7 +182,13 @@ public class InventoryUI : MonoBehaviour
         foreach (var item in filtered)
         {
             var slotGO = Instantiate(itemSlotPrefab, content);
-            slotGO.GetComponent<ItemSlot>().Init(item);
+            var slot = slotGO.GetComponent<ItemSlot>();
+
+            //  변경: 픽 모드일 때는 클릭 콜백을 넘겨줌
+            if (pickMode)
+                slot.Init(item, OnSlotClickedForPick);
+            else
+                slot.Init(item, null);
         }
     }
 

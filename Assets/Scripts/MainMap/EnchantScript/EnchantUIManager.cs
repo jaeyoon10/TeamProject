@@ -36,7 +36,7 @@ public class EnchantUIManager : MonoBehaviour
     [Range(0, 100)] public int minChance = 5;
     [Range(0, 100)] public int maxChance = 95;
     [Range(0, 50)] public int levelPenalty = 7;     // 레벨당 -확률
-    [Range(0, 50)] public int perMaterialBonus = 20;// 재료 1개당 +확률 (모든 재료 동일 취급)
+    [Range(0, 50)] public int perMaterialBonus = 5;// 재료 1개당 +확률 (모든 재료 동일 취급)
 
     [SerializeField] private StoreOpener storeOpener;
     private enum PickTarget { None, A, B }
@@ -50,13 +50,48 @@ public class EnchantUIManager : MonoBehaviour
         if (panel) panel.SetActive(false);
         if (selectPanel) selectPanel.SetActive(false);
 
-        if (matSlotA) matSlotA.onClick.AddListener(() => OpenSelect(PickTarget.A));
-        if (matSlotB) matSlotB.onClick.AddListener(() => OpenSelect(PickTarget.B));
+        if (matSlotA) matSlotA.onClick.AddListener(() => StartPick(PickTarget.A));
+        if (matSlotB) matSlotB.onClick.AddListener(() => StartPick(PickTarget.B));
+
         if (btnCloseSelect) btnCloseSelect.onClick.AddListener(CloseSelect);
 
         if (btnEnhance) btnEnhance.onClick.AddListener(OnClickEnhance);
         if (btnSell) btnSell.onClick.AddListener(OnClickSellToCustomer);
         if (btnShop) btnShop.onClick.AddListener(OpenShop);
+    }
+
+    void StartPick(PickTarget target)
+    {
+        pickTarget = target;
+
+        var inv = FindObjectOfType<InventoryUI>(true);
+        var opener = FindObjectOfType<InvnetoryOpen>(true);
+        if (inv == null || opener == null) return;
+
+        // 인벤토리 열기
+        opener.ShowInventoryPanel();
+
+        // 강화 재료만 고를 수 있도록 필터 + 콜백 등록
+        inv.SetPickMode(
+            OnPickMaterialFromInventory,
+            it => it.category == ItemCategory.Enhancement && it.quantity > 0
+        );
+    }
+
+    // 추가: 인벤토리에서 아이템을 클릭했을 때 슬롯에 장착
+    void OnPickMaterialFromInventory(InventoryItem item)
+    {
+        if (pickTarget == PickTarget.A) EnchantSession.matA = item;
+        else if (pickTarget == PickTarget.B) EnchantSession.matB = item;
+
+        // 아이콘/확률 갱신
+        RefreshAll();
+
+        // 인벤토리 닫기 (원하면 주석 처리해서 열린 채로 두어도 됨)
+        var opener = FindObjectOfType<InvnetoryOpen>(true);
+        opener?.CloseInventoryPanel();
+
+        pickTarget = PickTarget.None;
     }
 
     public void Show()
@@ -82,25 +117,40 @@ public class EnchantUIManager : MonoBehaviour
     void RefreshAll()
     {
         int cur = EnchantSession.enchantLevel;
-        int next = cur + 1;
-
         if (levelText)
-            levelText.text = $"+{EnchantSession.enchantLevel} => +{EnchantSession.enchantLevel + 1}";
+            levelText.text = $"+{cur} => +{cur + 1}";
 
-        if (chanceText) chanceText.text = $"확률 : {CalcSuccessChance()}%";
+        int bonus = 0;
+        if (EnchantSession.matA != null) bonus += perMaterialBonus;
+        if (EnchantSession.matB != null) bonus += perMaterialBonus;
 
+        int baseC = baseChance - levelPenalty * cur;
+        int unclamped = baseC + bonus;
+        int shown = Mathf.Clamp(unclamped, minChance, maxChance);
+
+        if (chanceText)
+        {
+            if (bonus > 0)
+                chanceText.text = $"성공 확률 : {shown}% (+{bonus}%)";
+            else
+                chanceText.text = $"성공 확률 : {shown}%";
+        }
         // 슬롯 아이콘
         if (matSlotAIcon)
         {
             matSlotAIcon.enabled = (EnchantSession.matA != null);
             if (EnchantSession.matA != null)
                 matSlotAIcon.sprite = EnchantSession.matA.icon;
+            else
+                matSlotAIcon.sprite = null;
         }
         if (matSlotBIcon)
         {
             matSlotBIcon.enabled = (EnchantSession.matB != null);
             if (EnchantSession.matB != null)
                 matSlotBIcon.sprite = EnchantSession.matB.icon;
+            else
+                matSlotBIcon.sprite = null;
         }
 
         int baseWithout = CalcBasePriceWithoutEnchant();
@@ -184,22 +234,28 @@ public class EnchantUIManager : MonoBehaviour
     // ----------------- 버튼: 강화하기 -----------------
     void OnClickEnhance()
     {
+        ConsumeIfAny(EnchantSession.matA);
+        ConsumeIfAny(EnchantSession.matB);
+
         int chance = CalcSuccessChance();
         int roll = Random.Range(0, 100);
 
         if (roll < chance)
         {
             EnchantSession.enchantLevel++;
-
-            // 재료 1개씩 차감(있을 때만)
-            if (EnchantSession.matA != null) ConsumeOne(EnchantSession.matA);
-            if (EnchantSession.matB != null) ConsumeOne(EnchantSession.matB);
             // TODO: 성공 연출
         }
         else
         {
-            // TODO: 실패 연출 (하락/유지/파괴 결정시 여기에)
+            // TODO: 실패 연출
         }
+
+        // 한 번 사용한 재료는 슬롯에서 제거
+        EnchantSession.matA = null;
+        EnchantSession.matB = null;
+
+        matSlotA.interactable = true;
+        matSlotB.interactable = true;
 
         RefreshAll();
     }
@@ -243,11 +299,13 @@ public class EnchantUIManager : MonoBehaviour
         return list;
     }
 
-    void ConsumeOne(InventoryItem item)
+    void ConsumeIfAny(InventoryItem item)
     {
+        if (item == null) return;
         var inv = FindObjectOfType<InventoryUI>();
-        if (inv == null || item == null) return;
+        if (inv == null) return;
         item.quantity = Mathf.Max(0, item.quantity - 1);
-        inv.Refresh(); // 수량 UI 갱신
+        inv.Refresh();
     }
+
 }

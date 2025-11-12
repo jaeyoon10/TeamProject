@@ -12,7 +12,7 @@ public class QuestUIManager : MonoBehaviour
 
     public List<QuestData> questChain = new List<QuestData>();
 
-    public int activeCount = 2; // 스샷처럼 2줄도 가능
+    public int activeCount = 5; // 스샷처럼 2줄도 가능
 
     List<GameObject> _currentSlots = new();
     int _nextIndexToOpen = 0; // 다음에 열릴 퀘스트 인덱스
@@ -48,7 +48,7 @@ public class QuestUIManager : MonoBehaviour
         }
     }
 
-        void BuildActiveSlots()
+    void BuildActiveSlots()
     {
         ClearAllSlots();
 
@@ -111,15 +111,23 @@ public class QuestUIManager : MonoBehaviour
 
         CharacterInfoManager.Instance?.AddQuestProfit(claimed.rewardGold);
 
-        // 체인에서 다음 슬롯 열기 로직
-        int claimedIndex = questChain.IndexOf(claimed);
-        if (claimedIndex == _nextIndexToOpen)
+        var slotObj = _currentSlots.Find(go =>
         {
-            // 가장 앞쪽 활성 퀘스트를 수령했다면 개시 인덱스 +1
-            _nextIndexToOpen = Mathf.Min(_nextIndexToOpen + 1, questChain.Count);
+            var slot = go.GetComponent<QusetSlotController>();
+            return slot != null && slot.name.Contains(claimed.questName);
+        });
+        if (slotObj)
+        {
+            Destroy(slotObj);
+            _currentSlots.Remove(slotObj);
         }
 
-        // UI 재구성(활성 라인 유지)
-        BuildActiveSlots();
+        // 다음 퀘스트 추가
+        if (_nextIndexToOpen < questChain.Count)
+        {
+            var q = questChain[_nextIndexToOpen];
+            CreateQuestSlot(q);
+            _nextIndexToOpen++;
+        }
     }
 }

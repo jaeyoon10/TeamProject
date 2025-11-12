@@ -9,31 +9,37 @@ public class ItemSlot : MonoBehaviour
     public Image icon;              // ← 아이템 아이콘
     public TMP_Text quantityText;   // ← 하단 수량 표시
 
-    /// <summary>
-    /// 인벤토리에 추가될 때 호출됩니다.
-    /// </summary>
-    public void Init(InventoryItem item)
+    private InventoryItem bound;
+    private System.Action<InventoryItem> clickCb;  
+
+    public void Init(InventoryItem item, System.Action<InventoryItem> onClick = null)
     {
 
-        // 1) 아이콘 세팅
+        bound = item;
+        clickCb = onClick;
+
         icon.sprite = item.icon;
         icon.preserveAspect = true;
 
-        // 2) 배경 색상 세팅 (effectType에 따라)
         switch (item.effectType)
         {
             case EffectType.EasyMiniGame:
-                backgroundImage.color = new Color(0.7f, 0.5f, 0.8f);  // 보라 예시
+                backgroundImage.color = new Color(0.7f, 0.5f, 0.8f);
                 break;
             case EffectType.NoBelowBQuality:
-                backgroundImage.color = new Color(0.4f, 0.6f, 1.0f);  // 파랑 예시
+                backgroundImage.color = new Color(0.4f, 0.6f, 1.0f);
                 break;
             default:
-                backgroundImage.color = new Color(0.9f, 0.9f, 0.9f);  // 기본 회색
+                backgroundImage.color = new Color(0.9f, 0.9f, 0.9f);
                 break;
         }
 
-        // 3) 수량 표시
         quantityText.text = item.quantity.ToString();
+    }
+
+    //  Button.onClick에 연결
+    public void OnClick()
+    {
+        clickCb?.Invoke(bound);
     }
 }
