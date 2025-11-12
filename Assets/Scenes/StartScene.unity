@@ -38,7 +38,7 @@ RenderSettings:
   m_ReflectionIntensity: 1
   m_CustomReflection: {fileID: 0}
   m_Sun: {fileID: 0}
-  m_IndirectSpecularColor: {r: 0.509982, g: 0.66007876, b: 0.7969524, a: 1}
+  m_IndirectSpecularColor: {r: 0.5099821, g: 0.66007876, b: 0.7969531, a: 1}
   m_UseRadianceAmbientProbe: 0
 --- !u!157 &3
 LightmapSettings:
@@ -824,7 +824,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: -6.9595, y: -6.3614}
+  m_AnchoredPosition: {x: -6.9594727, y: -6.361389}
   m_SizeDelta: {x: 13.9189, y: 12.7229}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &1393824283
@@ -897,6 +897,11 @@ MonoBehaviour:
   bgm: {fileID: 786002154}
   bgmClip: {fileID: 8300000, guid: 73abf41bf043725489b88fa43ce32a8c, type: 3}
   bgmVolume: 0.6
+  playInScenes:
+  - StartScene
+  - CharacterSelectScene
+  useFade: 1
+  fadeTime: 0.6
 --- !u!4 &1473144080
 Transform:
   m_ObjectHideFlags: 0
