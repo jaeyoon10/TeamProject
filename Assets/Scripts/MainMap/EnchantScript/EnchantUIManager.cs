@@ -87,7 +87,7 @@ public class EnchantUIManager : MonoBehaviour
         // 아이콘/확률 갱신
         RefreshAll();
 
-        // 인벤토리 닫기 (원하면 주석 처리해서 열린 채로 두어도 됨)
+        // 인벤토리 닫기
         var opener = FindObjectOfType<InvnetoryOpen>(true);
         opener?.CloseInventoryPanel();
 
@@ -113,7 +113,6 @@ public class EnchantUIManager : MonoBehaviour
         ModalController.Hide();
     }
 
-    // ----------------- UI Refresh -----------------
     void RefreshAll()
     {
         int cur = EnchantSession.enchantLevel;
@@ -138,19 +137,30 @@ public class EnchantUIManager : MonoBehaviour
         // 슬롯 아이콘
         if (matSlotAIcon)
         {
-            matSlotAIcon.enabled = (EnchantSession.matA != null);
             if (EnchantSession.matA != null)
+            {
                 matSlotAIcon.sprite = EnchantSession.matA.icon;
+                matSlotAIcon.color = Color.white;  // 완전 보이게
+            }
             else
+            {
                 matSlotAIcon.sprite = null;
+                // 알파 0으로 해서 “안 보이게만” 함 (버튼은 살려둠)
+                matSlotAIcon.color = new Color(1f, 1f, 1f, 0f);
+            }
         }
         if (matSlotBIcon)
         {
-            matSlotBIcon.enabled = (EnchantSession.matB != null);
             if (EnchantSession.matB != null)
+            {
                 matSlotBIcon.sprite = EnchantSession.matB.icon;
+                matSlotBIcon.color = Color.white;
+            }
             else
+            {
                 matSlotBIcon.sprite = null;
+                matSlotBIcon.color = new Color(1f, 1f, 1f, 0f);
+            }
         }
 
         int baseWithout = CalcBasePriceWithoutEnchant();
@@ -271,7 +281,7 @@ public class EnchantUIManager : MonoBehaviour
     void OpenShop()
     {
         if (storeOpener == null)
-            storeOpener = FindObjectOfType<StoreOpener>(true); // 비활성 오브젝트 포함 탐색
+            storeOpener = FindObjectOfType<StoreOpener>(true); 
 
         if (storeOpener != null)
         {
@@ -299,13 +309,30 @@ public class EnchantUIManager : MonoBehaviour
         return list;
     }
 
-    void ConsumeIfAny(InventoryItem item)
+    void ConsumeIfAny(InventoryItem pickedItem)
     {
-        if (item == null) return;
-        var inv = FindObjectOfType<InventoryUI>();
-        if (inv == null) return;
-        item.quantity = Mathf.Max(0, item.quantity - 1);
-        inv.Refresh();
+        if(pickedItem == null)
+        {
+            Debug.Log($"[Enchant] ConumeIfAny: pickedItem == null");
+            return;
+        }
+
+        Debug.Log($"[Enchant] BEFORE consume:{pickedItem.icon?.name}, qty={pickedItem.quantity}");
+
+        pickedItem.quantity = Mathf.Max(0, pickedItem.quantity - 1);
+
+        Debug.Log($"[Enchant] AFTER consume: {pickedItem.icon?.name}, qty={pickedItem.quantity}");
+
+        var inv = FindObjectOfType<InventoryUI>(true);
+        if(inv != null)
+        {
+            Debug.Log($"[Enchant] Refresh Inventory, allItems.Count = {inv.allItems?.Count}");
+            inv.Refresh();
+        }
+        else
+        {
+            Debug.LogWarning("[Enchant] InventoryUI를 찾지 못했습니다");
+        }
     }
 
 }

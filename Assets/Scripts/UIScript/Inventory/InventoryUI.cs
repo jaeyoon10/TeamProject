@@ -131,6 +131,8 @@ public class InventoryUI : MonoBehaviour
 
     public void Refresh()
     {
+        allItems.RemoveAll(x => x.quantity <= 0);
+
         // 1) 기존 슬롯 전부 제거
         foreach (Transform child in content)
             Destroy(child.gameObject);
