@@ -291,10 +291,4 @@ public class CharacterInfoManager : MonoBehaviour
         dailyProfit제작 = dailyProfit의뢰 = dailyCost상점 = dailyCost강화 = 0;
     }
     #endregion
-
-    public void AddTestXP()
-    {
-        AddXP(50); // 원하는 값 넣으면 됨
-        Debug.Log("[CharacterInfoManager] 테스트용 XP 50 추가!");
-    }
 }
