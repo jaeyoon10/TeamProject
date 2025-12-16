@@ -119,6 +119,23 @@ public class EnchantUIManager : MonoBehaviour
         if (levelText)
             levelText.text = $"+{cur} => +{cur + 1}";
 
+        if (EnchantSession.Recipe && weaponIcon)
+        {
+            var recipe = EnchantSession.Recipe; // (방금 수정한 RecipeData)
+
+            // 1강 이상이고, 배열에 해당 단계의 이미지가 준비되어 있다면 교체
+            // (1강은 배열의 0번째이므로 'cur - 1'을 사용)
+            if (cur > 0 && recipe.enhanceIcons != null && (cur - 1) < recipe.enhanceIcons.Length)
+            {
+                weaponIcon.sprite = recipe.enhanceIcons[cur - 1];
+            }
+            else
+            {
+                // 0강이거나, 아직 이미지가 준비 안 된 단계면 '기본 아이콘' 사용
+                weaponIcon.sprite = recipe.icon;
+            }
+        }
+
         int bonus = 0;
         if (EnchantSession.matA != null) bonus += perMaterialBonus;
         if (EnchantSession.matB != null) bonus += perMaterialBonus;

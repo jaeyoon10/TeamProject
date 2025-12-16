@@ -13,6 +13,9 @@ public class RecipeData : ScriptableObject
     public int xpReward;          // 제작 성공 시 얻는 경험치
     public int basePrice;         // 무기 기본 가격
 
+    [Header("Enchant Visuals")]
+    public Sprite[] enhanceIcons; // 1강, 2강, 3강... 순서대로 넣을 이미지들
+
     [System.Serializable]
     public struct Ingredient
     {

@@ -18,6 +18,17 @@ MonoBehaviour:
   requiredLevel: 2
   xpReward: 40
   basePrice: 850
+  enhanceIcons:
+  - {fileID: 21300000, guid: 44ab7acd38ec6d5409fd02bffe29d9e7, type: 3}
+  - {fileID: 21300000, guid: 9bbe56ed8998dd643a9231825637a914, type: 3}
+  - {fileID: 21300000, guid: 5bc8192fb07d3a844ad63609102976e5, type: 3}
+  - {fileID: 21300000, guid: 5bc8192fb07d3a844ad63609102976e5, type: 3}
+  - {fileID: 21300000, guid: a0311d590781baa4e9211aa52208dac4, type: 3}
+  - {fileID: 21300000, guid: 0c8f4fee5fc29994ba9be8a1a59c8265, type: 3}
+  - {fileID: 21300000, guid: 21442c8fde1a3e146a2507fd36bb4516, type: 3}
+  - {fileID: 21300000, guid: d2e364bee177d5840abd4d107ecb85e9, type: 3}
+  - {fileID: 21300000, guid: d87b4c42400ae1f45b39efe7b2cb26a9, type: 3}
+  - {fileID: 21300000, guid: 84b08cff2e1b09148901c30fc94f92cd, type: 3}
   ingredients:
   - name: "\uB098\uBB34"
     icon: {fileID: 21300000, guid: 61b5486169a2fe945a3594fa88fe5316, type: 3}
