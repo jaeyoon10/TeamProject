@@ -11,7 +11,7 @@ public class EnchantSession
     // ▼ 강화 레벨 및 가격 배율
     public static int enchantLevel = 0;   // 0 = 무강, 1 = 1강 ...
     public static float perLevelRate = 0.10f; // 레벨당 +10% (원하면 조정)
-    public static InventoryItem matA;         // 네 인벤토리 아이템 타입으로 교체
+    public static InventoryItem matA;         // 인벤토리 아이템 타입으로 교체
     public static InventoryItem matB;
 
 
